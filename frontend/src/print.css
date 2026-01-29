@@ -1,0 +1,236 @@
+/* Estilos para impressão */
+@media print {
+  /* Forçar orientação paisagem */
+  @page {
+    size: A4 landscape;
+    margin: 1cm;
+  }
+
+  /* Ocultar elementos que não devem ser impressos */
+  aside,
+  .no-print,
+  button,
+  input[type="date"],
+  input[type="text"],
+  select {
+    display: none !important;
+  }
+
+  /* Remover margens laterais do main */
+  main {
+    margin-left: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Ajustar largura do conteúdo */
+  body {
+    margin: 0;
+    padding: 10px;
+    width: 100%;
+  }
+
+  /* Container principal ocupa toda largura */
+  [style*="maxWidth"] {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  /* Grids se adaptam para paisagem */
+  .grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)) !important;
+  }
+
+  /* Cards em duas colunas quando possível */
+  .grid-cols-1 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .grid-cols-2 {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+
+  .grid-cols-3 {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+
+  /* Tabelas ocupam largura total */
+  table {
+    width: 100% !important;
+    font-size: 8px !important;
+  }
+
+  th, td {
+    padding: 4px 6px !important;
+  }
+
+  /* Reduzir padding para aproveitar espaço */
+  .p-6 {
+    padding: 8px !important;
+  }
+
+  .p-8 {
+    padding: 10px !important;
+  }
+
+  .p-4 {
+    padding: 6px !important;
+  }
+
+  .p-3 {
+    padding: 4px !important;
+  }
+
+  .mb-8 {
+    margin-bottom: 10px !important;
+  }
+
+  .mb-6 {
+    margin-bottom: 8px !important;
+  }
+
+  .mb-4 {
+    margin-bottom: 6px !important;
+  }
+
+  .gap-6 {
+    gap: 8px !important;
+  }
+
+  .gap-4 {
+    gap: 6px !important;
+  }
+
+  /* Forçar cores de fundo dos cards para impressão */
+  .bg-gradient-to-br,
+  .bg-gray-800,
+  .bg-blue-600,
+  .bg-green-600,
+  .bg-red-600,
+  .bg-purple-600,
+  .bg-orange-600 {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* Ajustar tamanho de gráficos para impressão */
+  .recharts-wrapper {
+    max-width: 100% !important;
+  }
+
+  /* Melhorar contraste de texto para impressão */
+  .text-white,
+  .text-gray-100,
+  .text-gray-300 {
+    color: #000 !important;
+  }
+
+  /* Backgrounds claros para impressão */
+  .bg-gray-800 {
+    background-color: #f3f4f6 !important;
+    border: 1px solid #d1d5db;
+  }
+
+  /* Quebra de página */
+  .page-break {
+    page-break-after: always;
+  }
+
+  /* Manter tabelas juntas */
+  table {
+    page-break-inside: avoid;
+  }
+
+  /* Cards e seções */
+  .rounded-lg {
+    page-break-inside: avoid;
+    margin-bottom: 20px;
+  }
+
+  /* Ajustar sombras */
+  .shadow-md,
+  .shadow-lg {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12) !important;
+  }
+
+  /* Fonte para impressão */
+  * {
+    font-family: Arial, sans-serif !important;
+    font-size: 9px !important;
+  }
+
+  /* Cabeçalhos */
+  h1, h2, h3 {
+    color: #000 !important;
+    margin-bottom: 8px;
+    font-size: 14px !important;
+  }
+
+  h1 {
+    font-size: 16px !important;
+  }
+
+  h2 {
+    font-size: 12px !important;
+  }
+
+  /* Títulos de cards menores */
+  .text-xl {
+    font-size: 11px !important;
+  }
+
+  .text-3xl {
+    font-size: 15px !important;
+  }
+
+  .text-2xl {
+    font-size: 13px !important;
+  }
+
+  .text-lg {
+    font-size: 10px !important;
+  }
+
+  .text-sm {
+    font-size: 8px !important;
+  }
+
+  .text-xs {
+    font-size: 7px !important;
+  }
+
+  /* Gráficos se ajustam à largura */
+  .recharts-wrapper {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Responsive containers */
+  .recharts-responsive-container {
+    max-height: 250px !important;
+  }
+
+  /* Estatísticas em linha para aproveitar largura */
+  .flex.flex-col {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+  }
+
+  /* Cards de métricas em linha */
+  .bg-gradient-to-br {
+    flex: 1 1 200px !important;
+    min-width: 200px !important;
+  }
+
+  /* Largura máxima */
+  [style*="maxWidth"] {
+    max-width: 100% !important;
+  }
+
+  /* Paginação oculta */
+  nav[aria-label="pagination"] {
+    display: none !important;
+  }
+}

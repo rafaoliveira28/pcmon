@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { RefreshCw, Clock, CheckCircle, XCircle, Printer } from 'lucide-react';
 import FilterBar from '../components/FilterBar';
 import ActivityTable from '../components/ActivityTable';
 import Pagination from '../components/Pagination';
@@ -19,6 +19,10 @@ const Activities = () => {
     total: 0,
     total_pages: 1,
   });
+
+  const handlePrint = () => {
+    window.print();
+  };
 
   useEffect(() => {
     loadActivities();
@@ -101,16 +105,25 @@ const Activities = () => {
             Visualize todas as atividades monitoradas
           </p>
         </div>
-        <button
-          onClick={() => {
-            loadActivities();
-            loadStatistics();
-          }}
-          className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-        >
-          <RefreshCw size={16} />
-          Atualizar
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handlePrint}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <Printer size={16} />
+            Imprimir
+          </button>
+          <button
+            onClick={() => {
+              loadActivities();
+              loadStatistics();
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+          >
+            <RefreshCw size={16} />
+            Atualizar
+          </button>
+        </div>
       </div>
 
       <FilterBar onFilterChange={handleFilterChange} />

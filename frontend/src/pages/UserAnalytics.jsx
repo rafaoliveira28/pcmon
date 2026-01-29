@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { User, TrendingUp, Clock, Calendar, Activity, BarChart3, Zap, CheckCircle, XCircle } from 'lucide-react';
+import { User, TrendingUp, Clock, Calendar, Activity, BarChart3, Zap, CheckCircle, XCircle, Printer } from 'lucide-react';
 import { userService } from '../services/api';
 import FilterBar from '../components/FilterBar';
 import { format } from 'date-fns';
@@ -25,6 +25,10 @@ const UserAnalytics = () => {
   const [filters, setFilters] = useState({});
   const [statistics, setStatistics] = useState(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const handlePrint = () => {
+    window.print();
+  };
 
   useEffect(() => {
     loadUsers();
@@ -210,10 +214,21 @@ const UserAnalytics = () => {
   return (
     <div className="w-full px-6 py-8" style={{ maxWidth: '90vw', margin: '0 auto' }}>
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-          <User size={32} className="text-primary-600" />
-          Análise por Usuário
-        </h1>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+              <User size={32} className="text-primary-600" />
+              Análise por Usuário
+            </h1>
+          </div>
+          <button
+            onClick={handlePrint}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <Printer size={16} />
+            Imprimir
+          </button>
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <div>
