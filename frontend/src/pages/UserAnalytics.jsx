@@ -350,10 +350,17 @@ const UserAnalytics = () => {
                 <BarChart3 size={24} className="text-primary-600" />
                 Top 10 Aplicativos Mais Utilizados
               </h2>
-              <ResponsiveContainer width="100%" height={400}>
+              <ResponsiveContainer width="100%" height={450}>
                 <BarChart data={userStats.top_apps}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="executable" angle={-45} textAnchor="end" height={100} />
+                  <XAxis 
+                    dataKey="executable" 
+                    angle={-35} 
+                    textAnchor="end" 
+                    height={120}
+                    interval={0}
+                    tick={{ fontSize: 12 }}
+                  />
                   <YAxis label={{ value: 'Horas', angle: -90, position: 'insideLeft' }} />
                   <Tooltip 
                     formatter={(value) => {
@@ -483,7 +490,10 @@ const UserAnalytics = () => {
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={userStats.by_weekday}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="weekday" />
+                    <XAxis 
+                      dataKey="weekday" 
+                      tick={{ fontSize: 12 }}
+                    />
                     <YAxis label={{ value: 'Horas', angle: -90, position: 'insideLeft' }} />
                     <Tooltip 
                       formatter={(value) => {

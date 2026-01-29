@@ -40,7 +40,14 @@ const ActivityChart = ({ data, type = 'bar' }) => {
     <ResponsiveContainer width="100%" height={300}>
       <BarChart data={data}>
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="name" />
+        <XAxis 
+          dataKey="name" 
+          angle={-35}
+          textAnchor="end"
+          height={80}
+          interval={0}
+          tick={{ fontSize: 11 }}
+        />
         <YAxis />
         <Tooltip />
         <Bar dataKey="value" fill="#0ea5e9" />

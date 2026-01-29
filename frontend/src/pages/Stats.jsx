@@ -75,20 +75,25 @@ const Stats = () => {
       activities: parseInt(stat.total_activities || 0)
     }));
   
-  // Top aplicativos
+  // Top aplicativos - calcular tempo total por aplicativo
   const appUsage = {};
   stats.forEach(stat => {
-    if (stat.most_used_app) {
-      appUsage[stat.most_used_app] = (appUsage[stat.most_used_app] || 0) + 1;
+    const app = stat.most_used_app;
+    if (app) {
+      // Agregar o tempo total desse stat para o aplicativo
+      if (!appUsage[app]) {
+        appUsage[app] = 0;
+      }
+      appUsage[app] += parseFloat(stat.total_active_time_seconds || 0);
     }
   });
   
   const topApps = Object.entries(appUsage)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 6)
-    .map(([app, count]) => ({
+    .map(([app, totalSeconds]) => ({
       name: app.replace('.exe', ''),
-      value: count
+      value: parseFloat((totalSeconds / 3600).toFixed(2)) // converter para horas
     }));
 
   const formatDuration = (seconds) => {
@@ -245,10 +250,17 @@ const Stats = () => {
                 Top 5 Usuários por Tempo de Uso (horas)
               </h2>
               {topUsersByTime.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height={350}>
                   <BarChart data={topUsersByTime}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
+                    <XAxis 
+                      dataKey="name" 
+                      angle={-35} 
+                      textAnchor="end" 
+                      height={120}
+                      interval={0}
+                      tick={{ fontSize: 12 }}
+                    />
                     <YAxis />
                     <Tooltip 
                       content={({ active, payload }) => {
@@ -280,15 +292,15 @@ const Stats = () => {
                 Aplicativos Mais Utilizados
               </h2>
               {topApps.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height={400}>
                   <PieChart>
                     <Pie
                       data={topApps}
                       cx="50%"
-                      cy="50%"
+                      cy="40%"
                       labelLine={false}
-                      label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                      outerRadius={80}
+                      label={false}
+                      outerRadius={90}
                       fill="#8884d8"
                       dataKey="value"
                     >
@@ -296,7 +308,24 @@ const Stats = () => {
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip 
+                      formatter={(value, name, props) => {
+                        const hours = Math.floor(value);
+                        const minutes = Math.floor((value % 1) * 60);
+                        return [`${hours}h ${minutes}m`, 'Tempo'];
+                      }}
+                      labelFormatter={(label) => `${label}`}
+                    />
+                    <Legend 
+                      verticalAlign="bottom" 
+                      height={80}
+                      wrapperStyle={{ paddingTop: '20px' }}
+                      formatter={(value, entry) => {
+                        const hours = Math.floor(entry.payload.value);
+                        const minutes = Math.floor((entry.payload.value % 1) * 60);
+                        return `${value}: ${hours}h ${minutes}m`;
+                      }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (

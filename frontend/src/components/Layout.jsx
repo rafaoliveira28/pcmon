@@ -17,21 +17,30 @@ const Layout = ({ children }) => {
     <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
       <aside 
-        className={`fixed left-0 top-0 h-full bg-white shadow-lg z-50 transition-all duration-300 ${
+        className={`fixed left-0 top-0 h-full bg-white shadow-lg z-50 transition-all duration-300 ease-in-out overflow-hidden ${
           isSidebarHovered ? 'w-64' : 'w-20'
         }`}
         onMouseEnter={() => setIsSidebarHovered(true)}
         onMouseLeave={() => setIsSidebarHovered(false)}
       >
-        <div className={`p-6 border-b ${!isSidebarHovered && 'px-4'}`}>
-          {isSidebarHovered ? (
-            <>
-              <h1 className="text-2xl font-bold text-primary-600">PC Monitor</h1>
-              <p className="text-sm text-gray-500 mt-1">Sistema de Monitoramento</p>
-            </>
-          ) : (
-            <h1 className="text-2xl font-bold text-primary-600 text-center">PM</h1>
-          )}
+        <div className={`p-6 border-b transition-all duration-300 ${!isSidebarHovered && 'px-4'}`}>
+          <div className="relative">
+            <h1 className={`text-2xl font-bold text-primary-600 whitespace-nowrap transition-all duration-300 ${
+              isSidebarHovered ? 'opacity-100 delay-75' : 'opacity-0 absolute'
+            }`}>
+              PC Monitor
+            </h1>
+            <h1 className={`text-2xl font-bold text-primary-600 text-center transition-all duration-300 ${
+              !isSidebarHovered ? 'opacity-100 delay-75' : 'opacity-0 absolute'
+            }`}>
+              PM
+            </h1>
+          </div>
+          <p className={`text-sm text-gray-500 mt-1 whitespace-nowrap transition-all duration-300 ${
+            isSidebarHovered ? 'opacity-100 delay-100' : 'opacity-0 h-0'
+          }`}>
+            Sistema de Monitoramento
+          </p>
         </div>
         
         <nav className="p-4">
@@ -40,16 +49,20 @@ const Layout = ({ children }) => {
               key={item.path}
               to={item.path}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-colors ${
+                `flex items-center rounded-lg mb-2 transition-all duration-300 ${
                   isActive
                     ? 'bg-primary-600 text-white'
                     : 'text-gray-700 hover:bg-gray-100'
-                } ${!isSidebarHovered && 'justify-center'}`
+                } ${isSidebarHovered ? 'gap-3 px-4 py-3' : 'justify-center px-3 py-3'}`
               }
               title={!isSidebarHovered ? item.label : ''}
             >
-              <item.icon size={20} />
-              {isSidebarHovered && <span className="font-medium">{item.label}</span>}
+              <item.icon size={20} className="flex-shrink-0" />
+              <span className={`font-medium whitespace-nowrap overflow-hidden transition-all duration-300 ${
+                isSidebarHovered ? 'opacity-100 max-w-xs delay-75' : 'opacity-0 max-w-0'
+              }`}>
+                {item.label}
+              </span>
             </NavLink>
           ))}
         </nav>
