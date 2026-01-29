@@ -102,7 +102,7 @@ const Stats = () => {
   };
 
   return (
-    <div>
+    <div className="w-full px-6 py-8" style={{ maxWidth: '90vw', margin: '0 auto' }}>
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Estatísticas do Sistema</h1>

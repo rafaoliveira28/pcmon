@@ -208,7 +208,7 @@ const UserAnalytics = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
+    <div className="w-full px-6 py-8" style={{ maxWidth: '90vw', margin: '0 auto' }}>
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
           <User size={32} className="text-primary-600" />
@@ -308,7 +308,7 @@ const UserAnalytics = () => {
       {userStats && (
         <>
           {/* Cards de Resumo */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -328,17 +328,6 @@ const UserAnalytics = () => {
                   <p className="text-purple-100 text-xs mt-1">programas diferentes</p>
                 </div>
                 <Activity className="opacity-50" size={48} />
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-lg p-6 text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-orange-100 text-sm font-medium">Dias Ativos</p>
-                  <p className="text-3xl font-bold mt-2">{userStats.general.days_active}</p>
-                  <p className="text-orange-100 text-xs mt-1">dias com registro</p>
-                </div>
-                <Calendar className="opacity-50" size={48} />
               </div>
             </div>
 

@@ -40,11 +40,51 @@ const Computers = () => {
     try {
       setLoading(true);
       
-      // Buscar computadores
-      const computersResponse = await computerService.getAll();
+      // Buscar computadores e status de atividade em paralelo
+      const [computersResponse, activityStatusResponse] = await Promise.all([
+        computerService.getAll(),
+        computerService.getAllActivityStatus().catch(() => ({ success: false, data: [] }))
+      ]);
       
       if (computersResponse.success) {
-        setComputers(computersResponse.data);
+        let computersData = computersResponse.data;
+        
+        // Se temos dados de atividade do mouse, usar para definir status
+        if (activityStatusResponse.success && activityStatusResponse.data) {
+          const activityMap = {};
+          activityStatusResponse.data.forEach(activity => {
+            const key = `${activity.hostname}_${activity.username}`;
+            activityMap[key] = {
+              status: activity.status,
+              seconds_since_activity: activity.seconds_since_activity,
+              last_activity: activity.last_activity
+            };
+          });
+          
+          // Atualizar status dos computadores baseado na atividade do mouse
+          computersData = computersData.map(computer => {
+            const key = `${computer.hostname}_${computer.username}`;
+            const activity = activityMap[key];
+            
+            if (activity) {
+              return {
+                ...computer,
+                status: activity.status,
+                seconds_since_activity: activity.seconds_since_activity,
+                last_mouse_activity: activity.last_activity
+              };
+            }
+            
+            // Se não tem dados de mouse activity, marcar como unknown
+            return {
+              ...computer,
+              status: 'inactive',
+              seconds_since_activity: null
+            };
+          });
+        }
+        
+        setComputers(computersData);
       }
     } catch (error) {
       console.error('Erro ao carregar computadores:', error);
@@ -90,42 +130,10 @@ const Computers = () => {
       
       if (response.success) {
         setWindowsSnapshot(response.data);
-        // Atualizar status do computador para active se temos snapshot
-        setComputers(prevComputers => 
-          prevComputers.map(c => 
-            c.hostname === selectedComputer.hostname && c.username === selectedComputer.username
-              ? { ...c, status: 'active' }
-              : c
-          )
-        );
-        // Atualizar selectedComputer também
-        setSelectedComputer(prev => ({ ...prev, status: 'active' }));
-      } else {
-        setWindowsSnapshot(null);
-        // Atualizar status do computador para offline se não temos snapshot
-        setComputers(prevComputers => 
-          prevComputers.map(c => 
-            c.hostname === selectedComputer.hostname && c.username === selectedComputer.username
-              ? { ...c, status: 'offline' }
-              : c
-          )
-        );
-        // Atualizar selectedComputer também
-        setSelectedComputer(prev => ({ ...prev, status: 'offline' }));
       }
     } catch (error) {
       console.error('Erro ao carregar snapshot:', error);
       setWindowsSnapshot(null);
-      // Atualizar status do computador para offline em caso de erro
-      setComputers(prevComputers => 
-        prevComputers.map(c => 
-          c.hostname === selectedComputer.hostname && c.username === selectedComputer.username
-            ? { ...c, status: 'offline' }
-            : c
-        )
-      );
-      // Atualizar selectedComputer também
-      setSelectedComputer(prev => ({ ...prev, status: 'offline' }));
     } finally {
       setActivityLoading(false);
     }
@@ -191,7 +199,7 @@ const Computers = () => {
   };
 
   return (
-    <div>
+    <div className="w-full px-6 py-8" style={{ maxWidth: '90vw', margin: '0 auto' }}>
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Computadores</h1>
@@ -314,8 +322,8 @@ const Computers = () => {
                 </div>
               </div>
 
-              {/* Botão Detalhes - não aparece para offline */}
-              {computer.status !== 'offline' && (
+              {/* Botão Detalhes - só aparece para active e inactive */}
+              {(computer.status === 'active' || computer.status === 'inactive') && (
                 <button
                   onClick={() => handleViewDetails(computer)}
                   className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -323,14 +331,6 @@ const Computers = () => {
                   <Eye size={16} />
                   Ver Detalhes
                 </button>
-              )}
-              
-              {/* Mensagem para computadores offline */}
-              {computer.status === 'offline' && (
-                <div className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-500 rounded-lg">
-                  <Circle size={16} className="text-red-500" fill="currentColor" />
-                  <span className="text-sm">Sem dados recentes</span>
-                </div>
               )}
             </div>
           ))}
