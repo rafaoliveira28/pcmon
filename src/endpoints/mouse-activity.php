@@ -46,15 +46,16 @@ function saveMouseActivity($db, $data) {
 // Obter status de atividade de todos os computadores
 function getComputersActivityStatus($db) {
     try {
-        // Computadores são considerados ativos se tiveram atividade nos últimos 60 segundos
+        // Computadores: ativo (<60s), inativo (60s-3600s), offline (>3600s)
         $sql = "SELECT 
                     hostname,
                     username,
                     last_activity,
                     TIMESTAMPDIFF(SECOND, last_activity, NOW()) as seconds_since_activity,
                     CASE 
-                        WHEN TIMESTAMPDIFF(SECOND, last_activity, NOW()) <= 60 THEN 'active'
-                        ELSE 'inactive'
+                        WHEN TIMESTAMPDIFF(SECOND, last_activity, NOW()) < 60 THEN 'active'
+                        WHEN TIMESTAMPDIFF(SECOND, last_activity, NOW()) < 3600 THEN 'inactive'
+                        ELSE 'offline'
                     END as status
                 FROM last_mouse_activity
                 ORDER BY last_activity DESC";
@@ -86,8 +87,9 @@ function getComputerActivityStatus($db, $hostname, $username) {
                     last_activity,
                     TIMESTAMPDIFF(SECOND, last_activity, NOW()) as seconds_since_activity,
                     CASE 
-                        WHEN TIMESTAMPDIFF(SECOND, last_activity, NOW()) <= 60 THEN 'active'
-                        ELSE 'inactive'
+                        WHEN TIMESTAMPDIFF(SECOND, last_activity, NOW()) < 60 THEN 'active'
+                        WHEN TIMESTAMPDIFF(SECOND, last_activity, NOW()) < 3600 THEN 'inactive'
+                        ELSE 'offline'
                     END as status
                 FROM last_mouse_activity
                 WHERE hostname = :hostname AND username = :username";

@@ -40,7 +40,7 @@ function getComputers($db, $params) {
         $sql = "SELECT 
                     ae.hostname,
                     ae.username,
-                    MAX(ae.start_time) as last_activity,
+                    COALESCE(ma.last_activity, MAX(ae.start_time)) as last_activity,
                     COALESCE(TIMESTAMPDIFF(SECOND, ma.last_activity, NOW()), 999999) as seconds_since_last,
                     CASE 
                         WHEN ma.last_activity IS NOT NULL AND TIMESTAMPDIFF(SECOND, ma.last_activity, NOW()) < 60 THEN 'active'
@@ -51,7 +51,7 @@ function getComputers($db, $params) {
                 FROM activity_events ae
                 LEFT JOIN last_mouse_activity ma ON ae.hostname = ma.hostname AND ae.username = ma.username
                 $whereClause
-                GROUP BY ae.hostname, ae.username
+                GROUP BY ae.hostname, ae.username, ma.last_activity
                 ORDER BY last_activity DESC";
         
         $stmt = $db->prepare($sql);

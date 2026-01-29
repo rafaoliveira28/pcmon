@@ -40,51 +40,11 @@ const Computers = () => {
     try {
       setLoading(true);
       
-      // Buscar computadores e status de atividade em paralelo
-      const [computersResponse, activityStatusResponse] = await Promise.all([
-        computerService.getAll(),
-        computerService.getAllActivityStatus().catch(() => ({ success: false, data: [] }))
-      ]);
+      // O endpoint /api/computers já retorna o status correto
+      const computersResponse = await computerService.getAll();
       
       if (computersResponse.success) {
-        let computersData = computersResponse.data;
-        
-        // Se temos dados de atividade do mouse, usar para definir status
-        if (activityStatusResponse.success && activityStatusResponse.data) {
-          const activityMap = {};
-          activityStatusResponse.data.forEach(activity => {
-            const key = `${activity.hostname}_${activity.username}`;
-            activityMap[key] = {
-              status: activity.status,
-              seconds_since_activity: activity.seconds_since_activity,
-              last_activity: activity.last_activity
-            };
-          });
-          
-          // Atualizar status dos computadores baseado na atividade do mouse
-          computersData = computersData.map(computer => {
-            const key = `${computer.hostname}_${computer.username}`;
-            const activity = activityMap[key];
-            
-            if (activity) {
-              return {
-                ...computer,
-                status: activity.status,
-                seconds_since_activity: activity.seconds_since_activity,
-                last_mouse_activity: activity.last_activity
-              };
-            }
-            
-            // Se não tem dados de mouse activity, marcar como unknown
-            return {
-              ...computer,
-              status: 'inactive',
-              seconds_since_activity: null
-            };
-          });
-        }
-        
-        setComputers(computersData);
+        setComputers(computersResponse.data);
       }
     } catch (error) {
       console.error('Erro ao carregar computadores:', error);
