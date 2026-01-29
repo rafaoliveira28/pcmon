@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Monitor, Circle, RefreshCw, Eye, X, Activity, Clock, TrendingUp, Maximize2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -8,6 +8,7 @@ const Computers = () => {
   const [computers, setComputers] = useState([]);
   const [filteredComputers, setFilteredComputers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true);
   const [statusFilter, setStatusFilter] = useState('all');
   const [usernameFilter, setUsernameFilter] = useState('');
   const [hostnameFilter, setHostnameFilter] = useState('');
@@ -17,28 +18,11 @@ const Computers = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedWindow, setSelectedWindow] = useState(null);
 
-  useEffect(() => {
-    loadComputers();
-    const interval = setInterval(loadComputers, 30000); // Atualiza a cada 30s
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    applyFilters();
-  }, [computers, statusFilter, usernameFilter, hostnameFilter]);
-
-  useEffect(() => {
-    let interval;
-    if (showModal && selectedComputer) {
-      loadWindowsSnapshot();
-      interval = setInterval(loadWindowsSnapshot, 5000); // Atualiza a cada 5s
-    }
-    return () => clearInterval(interval);
-  }, [showModal, selectedComputer]);
-
-  const loadComputers = async () => {
+  const loadComputers = useCallback(async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) {
+        setLoading(true);
+      }
       
       // O endpoint /api/computers já retorna o status correto
       const computersResponse = await computerService.getAll();
@@ -49,9 +33,31 @@ const Computers = () => {
     } catch (error) {
       console.error('Erro ao carregar computadores:', error);
     } finally {
-      setLoading(false);
+      if (showLoading) {
+        setLoading(false);
+      }
+      setInitialLoad(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadComputers();
+    const interval = setInterval(() => loadComputers(false), 30000);
+    return () => clearInterval(interval);
+  }, [loadComputers]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [computers, statusFilter, usernameFilter, hostnameFilter]);
+
+  useEffect(() => {
+    let interval;
+    if (showModal && selectedComputer) {
+      loadWindowsSnapshot();
+      interval = setInterval(loadWindowsSnapshot, 5000);
+    }
+    return () => clearInterval(interval);
+  }, [showModal, selectedComputer]);
 
   const applyFilters = () => {
     let filtered = [...computers];
@@ -168,7 +174,7 @@ const Computers = () => {
           </p>
         </div>
         <button
-          onClick={loadComputers}
+          onClick={() => loadComputers(true)}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
           <RefreshCw size={16} />

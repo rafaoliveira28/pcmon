@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { RefreshCw, Monitor, Users, Activity, Clock, TrendingUp, Zap, Eye, AlertCircle } from 'lucide-react';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { format, startOfDay, subDays } from 'date-fns';
@@ -9,21 +9,18 @@ const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'
 
 const Stats = () => {
   const [loading, setLoading] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true);
   const [stats, setStats] = useState([]);
   const [computers, setComputers] = useState([]);
   const [activityStatus, setActivityStatus] = useState([]);
   const [dateFilter, setDateFilter] = useState('today');
   const [customDate, setCustomDate] = useState(format(new Date(), 'yyyy-MM-dd'));
 
-  useEffect(() => {
-    loadAllData();
-    const interval = setInterval(loadAllData, 30000); // Atualiza a cada 30s
-    return () => clearInterval(interval);
-  }, [dateFilter, customDate]);
-
-  const loadAllData = async () => {
+  const loadAllData = useCallback(async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) {
+        setLoading(true);
+      }
       
       const params = {};
       if (dateFilter === 'today') {
@@ -52,9 +49,18 @@ const Stats = () => {
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
     } finally {
-      setLoading(false);
+      if (showLoading) {
+        setLoading(false);
+      }
+      setInitialLoad(false);
     }
-  };
+  }, [dateFilter, customDate]);
+
+  useEffect(() => {
+    loadAllData();
+    const interval = setInterval(() => loadAllData(false), 30000);
+    return () => clearInterval(interval);
+  }, [loadAllData]);
 
   // Calcular métricas gerais
   const totalComputers = computers.length;
@@ -116,7 +122,7 @@ const Stats = () => {
           </p>
         </div>
         <button
-          onClick={loadAllData}
+          onClick={() => loadAllData(true)}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
           <RefreshCw size={16} />
