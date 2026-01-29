@@ -1,0 +1,22 @@
+# Ignorar arquivos do sistema
+.DS_Store
+Thumbs.db
+
+# Ignorar arquivos de IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Ignorar logs
+*.log
+logs/
+
+# Ignorar arquivos de ambiente (se houver)
+.env
+.env.local
+
+# Ignorar volumes do Docker
+data/
+mysql_data/

@@ -1,0 +1,4 @@
+pywin32>=311
+psutil>=5.9.0
+requests>=2.31.0
+cx_Freeze>=6.15.0

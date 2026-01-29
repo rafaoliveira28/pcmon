@@ -1,0 +1,37 @@
+services:
+  # Serviço PHP com Apache
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pcmon_api
+    ports:
+      - "8090:80"
+    volumes:
+      - ./src:/var/www/html
+      - ./config:/var/www/config
+    environment:
+      - DB_HOST=10.1.3.173
+      - DB_PORT=3306
+      - DB_NAME=unimonitor
+      - DB_USER=UNIAGENTE
+      - DB_PASSWORD=U@1nM0n!
+    networks:
+      - pcmon_network
+
+  # Serviço Frontend React
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: pcmon_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    networks:
+      - pcmon_network
+
+networks:
+  pcmon_network:
+    driver: bridge
