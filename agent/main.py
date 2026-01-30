@@ -16,7 +16,8 @@ from monitor import ActivityMonitor
 
 def setup_logging(debug_mode=False):
     """Configura o sistema de logging"""
-    log_dir = os.path.join(os.environ.get('PROGRAMDATA', 'C:\\ProgramData'), 'WinSysMonitor')
+    # Usa AppData Local do usuário (sempre tem permissão)
+    log_dir = os.path.join(os.environ.get('LOCALAPPDATA', os.path.expanduser('~')), 'svch')
     os.makedirs(log_dir, exist_ok=True)
     log_file = os.path.join(log_dir, 'monitor.log')
     
