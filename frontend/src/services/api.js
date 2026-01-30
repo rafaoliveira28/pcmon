@@ -2,8 +2,8 @@ import axios from 'axios';
 
 // Detectar se está rodando em container ou localmente
 const API_BASE_URL = window.location.hostname === 'localhost' 
-  ? 'http://10.1.0.172:8090/api'
-  : 'http://10.1.0.172:8090/api';
+  ? 'http://10.1.0.172:8090/endpoints'
+  : 'http://10.1.0.172:8090/endpoints';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -11,6 +11,62 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Interceptor para adicionar token
+let authToken = null;
+
+api.interceptors.request.use(
+  (config) => {
+    if (authToken) {
+      config.headers.Authorization = `Bearer ${authToken}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Interceptor para tratar erros de autenticação
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token expirado ou inválido
+      authToken = null;
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Helper functions
+const apiHelper = {
+  get: async (url, config = {}) => {
+    const response = await api.get(url, config);
+    return response.data;
+  },
+  
+  post: async (url, data = {}, config = {}) => {
+    const response = await api.post(url, data, config);
+    return response.data;
+  },
+  
+  put: async (url, data = {}, config = {}) => {
+    const response = await api.put(url, data, config);
+    return response.data;
+  },
+  
+  delete: async (url, config = {}) => {
+    const response = await api.delete(url, config);
+    return response.data;
+  },
+  
+  setAuthToken: (token) => {
+    authToken = token;
+  }
+};
 
 // Window Activities
 export const windowActivityService = {
@@ -119,4 +175,4 @@ export const healthService = {
   },
 };
 
-export default api;
+export default apiHelper;

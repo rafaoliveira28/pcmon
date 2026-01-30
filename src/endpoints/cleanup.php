@@ -13,7 +13,9 @@ function cleanupAll($db) {
             'activity_periods',
             'daily_activity_summary',
             'last_mouse_activity', 
-            'windows_snapshot'
+            'windows_snapshot',
+            'user_sessions',
+            'user_activity_log'
         ];
         
         // TRUNCATE faz commit implícito, não usa transação
