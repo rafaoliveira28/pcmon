@@ -9,8 +9,30 @@ const ActivityChart = ({ data, type = 'bar' }) => {
       <div className="flex items-center justify-center h-64 text-gray-500">
         Sem dados para exibir
       </div>
-    );
-  }
+    );  }
+  
+  const formatTime = (minutes) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = Math.floor(minutes % 60);
+    if (hours > 0) {
+      return `${hours}h ${mins}m`;
+    }
+    return `${mins}m`;
+  };
+  
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0];
+      return (
+        <div className="bg-white p-3 border border-gray-200 rounded shadow-lg">
+          <p className="font-semibold text-gray-800">{data.payload.name}</p>
+          <p className="text-blue-600">
+            Tempo: {formatTime(data.value)}
+          </p>
+        </div>
+      );
+    }
+    return null;  }
 
   if (type === 'pie') {
     return (
@@ -48,8 +70,8 @@ const ActivityChart = ({ data, type = 'bar' }) => {
           interval={0}
           tick={{ fontSize: 11 }}
         />
-        <YAxis />
-        <Tooltip />
+        <YAxis label={{ value: 'Minutos', angle: -90, position: 'insideLeft' }} />
+        <Tooltip content={<CustomTooltip />} />
         <Bar dataKey="value" fill="#0ea5e9" />
       </BarChart>
     </ResponsiveContainer>
