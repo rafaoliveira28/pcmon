@@ -16,20 +16,52 @@ from monitor import ActivityMonitor
 
 def setup_logging(debug_mode=False):
     """Configura o sistema de logging"""
-    # Usa AppData Local do usuário (sempre tem permissão)
-    log_dir = os.path.join(os.environ.get('LOCALAPPDATA', os.path.expanduser('~')), 'svch')
-    os.makedirs(log_dir, exist_ok=True)
-    log_file = os.path.join(log_dir, 'monitor.log')
-    
     # Define nível baseado no modo debug
     level = logging.DEBUG if debug_mode else logging.ERROR
     
-    logging.basicConfig(
-        filename=log_file,
-        level=level,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
-    )
+    # Lista de diretórios para tentar (do mais específico ao mais genérico)
+    possible_log_dirs = [
+        os.path.join(os.environ.get('LOCALAPPDATA', ''), 'svch'),
+        os.path.join(os.environ.get('APPDATA', ''), 'svch'),
+        os.path.join(os.path.expanduser('~'), '.svch'),
+        os.path.join(os.environ.get('TEMP', ''), 'svch'),
+    ]
+    
+    log_file = None
+    
+    # Tenta cada diretório até conseguir criar o arquivo de log
+    for log_dir in possible_log_dirs:
+        if not log_dir or log_dir.startswith(os.sep):  # Skip se vazio ou inválido
+            continue
+            
+        try:
+            os.makedirs(log_dir, exist_ok=True)
+            test_file = os.path.join(log_dir, 'monitor.log')
+            
+            # Testa se consegue escrever no arquivo
+            with open(test_file, 'a') as f:
+                f.write('')
+            
+            log_file = test_file
+            break
+        except (PermissionError, OSError):
+            continue
+    
+    # Se nenhum local funcionou, usa apenas console
+    if log_file:
+        logging.basicConfig(
+            filename=log_file,
+            level=level,
+            format='%(asctime)s - %(levelname)s - %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        )
+    else:
+        # Fallback: apenas console/stderr
+        logging.basicConfig(
+            level=level,
+            format='%(asctime)s - %(levelname)s - %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        )
     
     if debug_mode:
         logging.info("=" * 50)

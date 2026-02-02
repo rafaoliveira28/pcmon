@@ -46,6 +46,6 @@ echo Uso:
 echo   WinSysMonitor.exe           - Executa em modo normal
 echo   WinSysMonitor.exe --debug   - Executa com logs detalhados
 echo.
-echo Logs salvos em: C:\ProgramData\WinSysMonitor\monitor.log
+echo Logs salvos em: %%LOCALAPPDATA%%\svch\monitor.log
 echo.
 pause
