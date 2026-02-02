@@ -9,6 +9,7 @@ import Activities from './pages/Activities';
 import Computers from './pages/Computers';
 import Stats from './pages/Stats';
 import Users from './pages/Users';
+import Settings from './pages/Settings';
 
 // Protected Route component
 const ProtectedRoute = ({ children, requireAdmin = false }) => {
@@ -97,6 +98,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute requireAdmin={true}>
               <Users />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/settings" 
+          element={
+            <ProtectedRoute requireAdmin={true}>
+              <Settings />
             </ProtectedRoute>
           } 
         />

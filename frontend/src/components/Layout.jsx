@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Activity, Monitor, BarChart3, User, Menu, X, Users, LogOut } from 'lucide-react';
+import { LayoutDashboard, Activity, Monitor, BarChart3, User, Menu, X, Users, LogOut, Settings } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Layout = () => {
@@ -16,7 +16,7 @@ const Layout = () => {
   ];
 
   if (isAdmin) {
-    navItems.push({ path: '/users', icon: Users, label: 'Usuários' });
+    navItems.push({ path: '/settings', icon: Settings, label: 'Configurações' });
   }
 
   const handleLogout = async () => {
