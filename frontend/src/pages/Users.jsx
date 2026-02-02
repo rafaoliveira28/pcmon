@@ -31,7 +31,7 @@ const Users = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/users.php');
+      const response = await api.get('/endpoints/users.php');
       if (response.success) {
         setUsers(response.data);
       } else {
@@ -48,7 +48,7 @@ const Users = () => {
     e.preventDefault();
     
     try {
-      const response = await api.post('/users.php', formData);
+      const response = await api.post('/endpoints/users.php', formData);
       
       if (response.success) {
         setShowCreateModal(false);
@@ -68,7 +68,7 @@ const Users = () => {
     }
 
     try {
-      const response = await api.put(`/users.php/${userId}/toggle-admin`, { is_admin: isAdmin });
+      const response = await api.put(`/endpoints/users.php/${userId}/toggle-admin`, { is_admin: isAdmin });
       
       if (response.success) {
         fetchUsers();
@@ -82,7 +82,7 @@ const Users = () => {
 
   const handleToggleActive = async (userId, isActive) => {
     try {
-      const response = await api.put(`/users.php/${userId}`, { is_active: isActive });
+      const response = await api.put(`/endpoints/users.php/${userId}`, { is_active: isActive });
       
       if (response.success) {
         fetchUsers();
@@ -108,7 +108,7 @@ const Users = () => {
     }
 
     try {
-      const response = await api.put(`/users.php/${selectedUser.id}/reset-password`, {
+      const response = await api.put(`/endpoints/users.php/${selectedUser.id}/reset-password`, {
         new_password: passwordData.new_password
       });
 
@@ -130,7 +130,7 @@ const Users = () => {
     }
 
     try {
-      const response = await api.delete(`/users.php/${userId}`);
+      const response = await api.delete(`/endpoints/users.php/${userId}`);
       
       if (response.success) {
         fetchUsers();

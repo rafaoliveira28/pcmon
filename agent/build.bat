@@ -7,7 +7,7 @@ echo.
 REM Verifica se existe config.json.template
 if not exist "config.json.template" (
     echo Criando config.json.template com valores padrão...
-    echo {"api_url": "http://10.1.0.172:8090"} > config.json.template
+    echo {"api_url": "http://pcmon.uniware.net.br:8090"} > config.json.template
 )
 
 REM Mostra URL da API configurada

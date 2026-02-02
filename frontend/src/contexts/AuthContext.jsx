@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuth = async () => {
     try {
-      const response = await api.get('/auth.php/me');
+      const response = await api.get('/endpoints/auth.php/me');
       if (response.success) {
         setUser(response.data);
       } else {
@@ -43,7 +43,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      const response = await api.post('/auth.php/login', { username, password });
+      const response = await api.post('/endpoints/auth.php/login', { username, password });
       
       if (response.success) {
         const { token: newToken, user: userData } = response.data;
@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       if (token) {
-        await api.post('/auth.php/logout');
+        await api.post('/endpoints/auth.php/logout');
       }
     } catch (error) {
       console.error('Logout error:', error);
@@ -77,7 +77,7 @@ export const AuthProvider = ({ children }) => {
 
   const changePassword = async (currentPassword, newPassword) => {
     try {
-      const response = await api.post('/auth.php/change-password', {
+      const response = await api.post('/endpoints/auth.php/change-password', {
         current_password: currentPassword,
         new_password: newPassword
       });

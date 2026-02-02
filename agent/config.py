@@ -28,9 +28,9 @@ class Config:
             try:
                 with open(config_path, 'r') as f:
                     config = json.load(f)
-                    return config.get('api_url', 'http://10.1.0.172:8090')
+                    return config.get('api_url', 'http://pcmon.uniware.net.br:8090')
             except Exception:
                 pass
         
         # Fallback: variável de ambiente ou padrão
-        return os.environ.get('API_URL', 'http://10.1.0.172:8090')
+        return os.environ.get('API_URL', 'http://pcmon.uniware.net.br:8090')
