@@ -175,22 +175,4 @@ export const healthService = {
   },
 };
 
-// Ignored Executables
-export const ignoredExecutablesService = {
-  getAll: async () => {
-    const response = await api.get('/api/ignored-executables');
-    return response.data;
-  },
-  
-  add: async (data) => {
-    const response = await api.post('/api/ignored-executables', data);
-    return response.data;
-  },
-  
-  remove: async (id) => {
-    const response = await api.delete(`/api/ignored-executables/${id}`);
-    return response.data;
-  },
-};
-
 export default apiHelper;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, Users, Ban, X, Plus, Trash2, AlertTriangle } from 'lucide-react';
+import { Settings as SettingsIcon, Users, Plus, Trash2, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 
@@ -9,10 +9,6 @@ const Settings = () => {
   const { user: currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState('users');
   
-  // Estados para Executáveis Ignorados
-  const [ignoredExecutables, setIgnoredExecutables] = useState([]);
-  const [newExecutable, setNewExecutable] = useState({ executable: '', description: '' });
-  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   
   // Estados para Limpeza
@@ -39,29 +35,10 @@ const Settings = () => {
   });
 
   useEffect(() => {
-    if (activeTab === 'ignored') {
-      loadIgnoredExecutables();
-    } else if (activeTab === 'users') {
+    if (activeTab === 'users') {
       loadUsers();
     }
   }, [activeTab]);
-
-  const loadIgnoredExecutables = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/api/ignored-executables`);
-      const data = await response.json();
-      
-      if (data.success) {
-        setIgnoredExecutables(data.data);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar executáveis ignorados:', error);
-      showMessage('error', 'Erro ao carregar lista de executáveis');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Funções de Usuários
   const loadUsers = async () => {
@@ -213,60 +190,6 @@ const Settings = () => {
     }
   };
 
-  const handleAddExecutable = async (e) => {
-    e.preventDefault();
-    
-    if (!newExecutable.executable.trim()) {
-      showMessage('error', 'Nome do executável é obrigatório');
-      return;
-    }
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/ignored-executables`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newExecutable),
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        showMessage('success', 'Executável adicionado com sucesso');
-        setNewExecutable({ executable: '', description: '' });
-        loadIgnoredExecutables();
-      } else {
-        showMessage('error', data.message || 'Erro ao adicionar executável');
-      }
-    } catch (error) {
-      console.error('Erro ao adicionar executável:', error);
-      showMessage('error', 'Erro ao adicionar executável');
-    }
-  };
-
-  const handleRemoveExecutable = async (id) => {
-    if (!confirm('Tem certeza que deseja remover este executável da lista?')) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/ignored-executables/${id}`, {
-        method: 'DELETE',
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        showMessage('success', 'Executável removido com sucesso');
-        loadIgnoredExecutables();
-      } else {
-        showMessage('error', data.message || 'Erro ao remover executável');
-      }
-    } catch (error) {
-      console.error('Erro ao remover executável:', error);
-      showMessage('error', 'Erro ao remover executável');
-    }
-  };
-
   const showMessage = (type, text) => {
     setMessage({ type, text });
     setTimeout(() => setMessage({ type: '', text: '' }), 5000);
@@ -305,17 +228,6 @@ const Settings = () => {
             >
               <Users size={16} className="inline mr-2" />
               Usuários
-            </button>
-            <button
-              onClick={() => setActiveTab('ignored')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === 'ignored'
-                  ? 'border-primary-600 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <Ban size={16} className="inline mr-2" />
-              Executáveis Ignorados
             </button>
             <button
               onClick={() => setActiveTab('cleanup')}
@@ -448,111 +360,6 @@ const Settings = () => {
             </div>
           )}
 
-          {/* Tab: Executáveis Ignorados */}
-          {activeTab === 'ignored' && (
-            <div>
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                  Adicionar Executável
-                </h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  Executáveis adicionados aqui não serão monitorados pelo sistema.
-                </p>
-                
-                <form onSubmit={handleAddExecutable} className="flex gap-4">
-                  <div className="flex-1">
-                    <input
-                      type="text"
-                      value={newExecutable.executable}
-                      onChange={(e) => setNewExecutable({ ...newExecutable, executable: e.target.value })}
-                      placeholder="Nome do executável (ex: svchost.exe)"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                      required
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <input
-                      type="text"
-                      value={newExecutable.description}
-                      onChange={(e) => setNewExecutable({ ...newExecutable, description: e.target.value })}
-                      placeholder="Descrição (opcional)"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="flex items-center gap-2 px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-                  >
-                    <Plus size={16} />
-                    Adicionar
-                  </button>
-                </form>
-              </div>
-
-              {/* Lista de Executáveis Ignorados */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                  Lista de Executáveis Ignorados ({ignoredExecutables.length})
-                </h3>
-                
-                {loading ? (
-                  <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-                  </div>
-                ) : ignoredExecutables.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    Nenhum executável ignorado
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Executável
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Descrição
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Adicionado em
-                          </th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Ações
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {ignoredExecutables.map((exe) => (
-                          <tr key={exe.id} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                              {exe.executable}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {exe.description || '-'}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {new Date(exe.created_at).toLocaleDateString('pt-BR')}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                              <button
-                                onClick={() => handleRemoveExecutable(exe.id)}
-                                className="text-red-600 hover:text-red-900 flex items-center gap-1 ml-auto"
-                              >
-                                <X size={16} />
-                                Remover
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
           {/* Tab: Limpeza */}
           {activeTab === 'cleanup' && (
             <div>
@@ -568,34 +375,34 @@ const Settings = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Card: Limpar Dados Antigos */}
                 <div className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow flex flex-col">
-                  <div className="flex items-start gap-4 flex-1">
-                    <div className="p-3 bg-yellow-100 rounded-lg">
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="p-3 bg-yellow-100 rounded-lg flex-shrink-0">
                       <Trash2 size={24} className="text-yellow-600" />
                     </div>
                     <div className="flex-1">
                       <h4 className="text-lg font-semibold text-gray-900 mb-2">
                         Limpar Dados Antigos
                       </h4>
-                      <p className="text-sm text-gray-600 mb-4">
+                      <p className="text-sm text-gray-600 mb-3">
                         Remove registros com <strong>mais de 30 dias</strong> das seguintes tabelas:
                       </p>
-                      <ul className="text-sm text-gray-600 mb-4 space-y-1">
-                        <li>• Eventos de atividade</li>
-                        <li>• Períodos de atividade</li>
-                        <li>• Resumos diários</li>
-                        <li>• Última atividade do mouse</li>
-                        <li>• Snapshots de janelas</li>
-                      </ul>
-                      <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3">
-                        <p className="text-xs text-yellow-800">
-                          <strong>Atenção:</strong> Dados removidos não podem ser recuperados.
-                        </p>
-                      </div>
                     </div>
+                  </div>
+                  <ul className="text-sm text-gray-600 mb-4 space-y-1 pl-6 flex-1">
+                    <li>• Eventos de atividade</li>
+                    <li>• Períodos de atividade</li>
+                    <li>• Resumos diários</li>
+                    <li>• Última atividade do mouse</li>
+                    <li>• Snapshots de janelas</li>
+                  </ul>
+                  <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 mb-4">
+                    <p className="text-xs text-yellow-800">
+                      <strong>Atenção:</strong> Dados removidos não podem ser recuperados.
+                    </p>
                   </div>
                   <button
                     onClick={() => handleCleanupRequest('old')}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors mt-4"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
                   >
                     <Trash2 size={16} />
                     Limpar Dados Antigos (30+ dias)
@@ -604,36 +411,36 @@ const Settings = () => {
 
                 {/* Card: Limpar Todos os Dados */}
                 <div className="border border-red-200 rounded-lg p-6 hover:shadow-md transition-shadow flex flex-col">
-                  <div className="flex items-start gap-4 flex-1">
-                    <div className="p-3 bg-red-100 rounded-lg">
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="p-3 bg-red-100 rounded-lg flex-shrink-0">
                       <AlertTriangle size={24} className="text-red-600" />
                     </div>
                     <div className="flex-1">
                       <h4 className="text-lg font-semibold text-gray-900 mb-2">
                         Limpar TODOS os Dados
                       </h4>
-                      <p className="text-sm text-gray-600 mb-4">
+                      <p className="text-sm text-gray-600 mb-3">
                         <strong className="text-red-600">AÇÃO DESTRUTIVA:</strong> Remove <strong>TODOS</strong> os registros das seguintes tabelas:
                       </p>
-                      <ul className="text-sm text-gray-600 mb-4 space-y-1">
-                        <li>• Eventos de atividade</li>
-                        <li>• Períodos de atividade</li>
-                        <li>• Resumos diários</li>
-                        <li>• Última atividade do mouse</li>
-                        <li>• Snapshots de janelas</li>
-                        <li>• Sessões de usuário</li>
-                        <li>• Log de atividade de usuário</li>
-                      </ul>
-                      <div className="bg-red-50 border-l-4 border-red-500 p-3">
-                        <p className="text-xs text-red-800">
-                          <strong>PERIGO:</strong> Esta ação apaga TODO o histórico de monitoramento e não pode ser desfeita!
-                        </p>
-                      </div>
                     </div>
+                  </div>
+                  <ul className="text-sm text-gray-600 mb-4 space-y-1 pl-6 flex-1">
+                    <li>• Eventos de atividade</li>
+                    <li>• Períodos de atividade</li>
+                    <li>• Resumos diários</li>
+                    <li>• Última atividade do mouse</li>
+                    <li>• Snapshots de janelas</li>
+                    <li>• Sessões de usuário</li>
+                    <li>• Log de atividade de usuário</li>
+                  </ul>
+                  <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-4">
+                    <p className="text-xs text-red-800">
+                      <strong>PERIGO:</strong> Esta ação apaga TODO o histórico de monitoramento e não pode ser desfeita!
+                    </p>
                   </div>
                   <button
                     onClick={() => handleCleanupRequest('all')}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors mt-4"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                   >
                     <AlertTriangle size={16} />
                     Limpar TODOS os Dados

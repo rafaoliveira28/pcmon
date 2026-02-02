@@ -192,24 +192,6 @@ try {
         compareUsers($db, $_GET);
     }
     
-    // Listar executáveis ignorados
-    elseif ($path === 'api/ignored-executables' && $method === 'GET') {
-        require_once __DIR__ . '/endpoints/ignored-executables.php';
-        getIgnoredExecutables($db);
-    }
-    
-    // Adicionar executável à lista de ignorados
-    elseif ($path === 'api/ignored-executables' && $method === 'POST') {
-        require_once __DIR__ . '/endpoints/ignored-executables.php';
-        addIgnoredExecutable($db, $input);
-    }
-    
-    // Remover executável da lista de ignorados
-    elseif (preg_match('#^api/ignored-executables/(\d+)$#', $path, $matches) && $method === 'DELETE') {
-        require_once __DIR__ . '/endpoints/ignored-executables.php';
-        removeIgnoredExecutable($db, $matches[1]);
-    }
-    
     // Limpar todos os dados
     elseif ($path === 'api/cleanup/all' && $method === 'DELETE') {
         require_once __DIR__ . '/endpoints/cleanup.php';
