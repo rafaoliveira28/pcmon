@@ -15,28 +15,73 @@ function saveActivityPeriod($db, $data) {
     }
     
     try {
-        $sql = "INSERT INTO activity_periods 
-                (hostname, username, period_type, start_time, end_time, duration_seconds) 
-                VALUES (:hostname, :username, :period_type, :start_time, :end_time, :duration_seconds)";
+        // Verifica se existe período aberto do mesmo tipo para este usuário
+        $sql = "SELECT id, start_time, period_type 
+                FROM activity_periods 
+                WHERE hostname = :hostname 
+                AND username = :username 
+                ORDER BY start_time DESC 
+                LIMIT 1";
         
         $stmt = $db->prepare($sql);
         $stmt->execute([
             ':hostname' => $data['hostname'],
-            ':username' => $data['username'],
-            ':period_type' => $data['period_type'],
-            ':start_time' => $data['start_time'],
-            ':end_time' => $data['end_time'],
-            ':duration_seconds' => $data['duration_seconds']
+            ':username' => $data['username']
         ]);
         
-        // Atualizar sumário diário
-        updateDailySummary($db, $data);
+        $lastPeriod = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        jsonResponse([
-            'success' => true,
-            'message' => 'Período registrado com sucesso',
-            'id' => $db->lastInsertId()
-        ], 201);
+        // Se existe período anterior do MESMO tipo, faz UPDATE (checkpoint)
+        if ($lastPeriod && $lastPeriod['period_type'] === $data['period_type']) {
+            $sql = "UPDATE activity_periods 
+                    SET end_time = :end_time,
+                        duration_seconds = :duration_seconds,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE id = :id";
+            
+            $stmt = $db->prepare($sql);
+            $stmt->execute([
+                ':id' => $lastPeriod['id'],
+                ':end_time' => $data['end_time'],
+                ':duration_seconds' => $data['duration_seconds']
+            ]);
+            
+            // Atualizar sumário diário (incremental)
+            updateDailySummary($db, $data, $lastPeriod['start_time']);
+            
+            jsonResponse([
+                'success' => true,
+                'message' => 'Período atualizado (checkpoint)',
+                'id' => $lastPeriod['id'],
+                'updated' => true
+            ], 200);
+            
+        } else {
+            // Período novo ou mudança de tipo - faz INSERT
+            $sql = "INSERT INTO activity_periods 
+                    (hostname, username, period_type, start_time, end_time, duration_seconds) 
+                    VALUES (:hostname, :username, :period_type, :start_time, :end_time, :duration_seconds)";
+            
+            $stmt = $db->prepare($sql);
+            $stmt->execute([
+                ':hostname' => $data['hostname'],
+                ':username' => $data['username'],
+                ':period_type' => $data['period_type'],
+                ':start_time' => $data['start_time'],
+                ':end_time' => $data['end_time'],
+                ':duration_seconds' => $data['duration_seconds']
+            ]);
+            
+            // Atualizar sumário diário
+            updateDailySummary($db, $data, $data['start_time']);
+            
+            jsonResponse([
+                'success' => true,
+                'message' => 'Período registrado com sucesso',
+                'id' => $db->lastInsertId(),
+                'updated' => false
+            ], 201);
+        }
         
     } catch (PDOException $e) {
         error_log("Erro ao salvar período: " . $e->getMessage());
@@ -49,9 +94,9 @@ function saveActivityPeriod($db, $data) {
 }
 
 // Atualizar sumário diário
-function updateDailySummary($db, $data) {
+function updateDailySummary($db, $data, $startTime) {
     try {
-        $date = date('Y-m-d', strtotime($data['start_time']));
+        $date = date('Y-m-d', strtotime($startTime));
         
         $sql = "INSERT INTO daily_activity_summary 
                 (hostname, username, date, total_active_seconds, total_inactive_seconds, first_activity, last_activity) 
@@ -75,8 +120,8 @@ function updateDailySummary($db, $data) {
             ':period_type2' => $data['period_type'],
             ':duration' => $data['duration_seconds'],
             ':duration2' => $data['duration_seconds'],
-            ':start_time' => $data['start_time'],
-            ':start_time2' => $data['start_time'],
+            ':start_time' => $startTime,
+            ':start_time2' => $startTime,
             ':end_time' => $data['end_time'],
             ':end_time2' => $data['end_time']
         ]);
