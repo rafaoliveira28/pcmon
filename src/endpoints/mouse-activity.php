@@ -46,19 +46,24 @@ function saveMouseActivity($db, $data) {
 // Obter status de atividade de todos os computadores
 function getComputersActivityStatus($db) {
     try {
-        // Computadores: ativo (<60s), inativo (60s-3600s), offline (>3600s)
+        // Nova lógica: offline = sem snapshot, inactive = sem input mas com snapshot, active = com input
         $sql = "SELECT 
-                    hostname,
-                    username,
-                    last_activity,
-                    TIMESTAMPDIFF(SECOND, last_activity, NOW()) as seconds_since_activity,
+                    ma.hostname,
+                    ma.username,
+                    ma.last_activity,
+                    TIMESTAMPDIFF(SECOND, ma.last_activity, NOW()) as seconds_since_activity,
                     CASE 
-                        WHEN TIMESTAMPDIFF(SECOND, last_activity, NOW()) < 60 THEN 'active'
-                        WHEN TIMESTAMPDIFF(SECOND, last_activity, NOW()) < 3600 THEN 'inactive'
-                        ELSE 'offline'
+                        -- Offline: sem snapshot de telas nos últimos 5 minutos
+                        WHEN ws.timestamp IS NULL THEN 'offline'
+                        -- Ativo: input (mouse/teclado) < 60 segundos
+                        WHEN TIMESTAMPDIFF(SECOND, ma.last_activity, NOW()) < 60 THEN 'active'
+                        -- Inativo: input > 60 segundos mas tem snapshot de telas
+                        ELSE 'inactive'
                     END as status
-                FROM last_mouse_activity
-                ORDER BY last_activity DESC";
+                FROM last_mouse_activity ma
+                LEFT JOIN windows_snapshot ws ON ma.hostname = ws.hostname AND ma.username = ws.username
+                    AND ws.timestamp > DATE_SUB(NOW(), INTERVAL 5 MINUTE)
+                ORDER BY ma.last_activity DESC";
         
         $stmt = $db->query($sql);
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -82,17 +87,22 @@ function getComputersActivityStatus($db) {
 function getComputerActivityStatus($db, $hostname, $username) {
     try {
         $sql = "SELECT 
-                    hostname,
-                    username,
-                    last_activity,
-                    TIMESTAMPDIFF(SECOND, last_activity, NOW()) as seconds_since_activity,
+                    ma.hostname,
+                    ma.username,
+                    ma.last_activity,
+                    TIMESTAMPDIFF(SECOND, ma.last_activity, NOW()) as seconds_since_activity,
                     CASE 
-                        WHEN TIMESTAMPDIFF(SECOND, last_activity, NOW()) < 60 THEN 'active'
-                        WHEN TIMESTAMPDIFF(SECOND, last_activity, NOW()) < 3600 THEN 'inactive'
-                        ELSE 'offline'
+                        -- Offline: sem snapshot de telas nos últimos 5 minutos
+                        WHEN ws.timestamp IS NULL THEN 'offline'
+                        -- Ativo: input (mouse/teclado) < 60 segundos
+                        WHEN TIMESTAMPDIFF(SECOND, ma.last_activity, NOW()) < 60 THEN 'active'
+                        -- Inativo: input > 60 segundos mas tem snapshot de telas
+                        ELSE 'inactive'
                     END as status
-                FROM last_mouse_activity
-                WHERE hostname = :hostname AND username = :username";
+                FROM last_mouse_activity ma
+                LEFT JOIN windows_snapshot ws ON ma.hostname = ws.hostname AND ma.username = ws.username
+                    AND ws.timestamp > DATE_SUB(NOW(), INTERVAL 5 MINUTE)
+                WHERE ma.hostname = :hostname AND ma.username = :username";
         
         $stmt = $db->prepare($sql);
         $stmt->execute([

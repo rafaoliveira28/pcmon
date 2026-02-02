@@ -1,4 +1,4 @@
-# PC Monitor - Frontend
+# Frontend
 
 Frontend moderno em React para o sistema de monitoramento de computadores.
 

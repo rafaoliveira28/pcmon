@@ -126,7 +126,7 @@ const Activities = () => {
         </div>
       </div>
 
-      <FilterBar onFilterChange={handleFilterChange} />
+      <FilterBar onFilterChange={handleFilterChange} hideDateFilter={true} />
 
       {/* Cartões de Estatísticas */}
       {statistics && (

@@ -43,15 +43,20 @@ function getComputers($db, $params) {
                     COALESCE(ma.last_activity, MAX(ae.start_time)) as last_activity,
                     COALESCE(TIMESTAMPDIFF(SECOND, ma.last_activity, NOW()), 999999) as seconds_since_last,
                     CASE 
+                        -- Offline: sem snapshot de telas nos últimos 5 minutos
+                        WHEN ws.timestamp IS NULL THEN 'offline'
+                        -- Ativo: input (mouse/teclado) < 60 segundos
                         WHEN ma.last_activity IS NOT NULL AND TIMESTAMPDIFF(SECOND, ma.last_activity, NOW()) < 60 THEN 'active'
-                        WHEN ma.last_activity IS NOT NULL AND TIMESTAMPDIFF(SECOND, ma.last_activity, NOW()) < 3600 THEN 'inactive'
-                        ELSE 'offline'
+                        -- Inativo: input > 60 segundos mas tem snapshot de telas
+                        ELSE 'inactive'
                     END as status,
                     COUNT(*) as total_activities
                 FROM activity_events ae
                 LEFT JOIN last_mouse_activity ma ON ae.hostname = ma.hostname AND ae.username = ma.username
+                LEFT JOIN windows_snapshot ws ON ae.hostname = ws.hostname AND ae.username = ws.username 
+                    AND ws.timestamp > DATE_SUB(NOW(), INTERVAL 5 MINUTE)
                 $whereClause
-                GROUP BY ae.hostname, ae.username, ma.last_activity
+                GROUP BY ae.hostname, ae.username, ma.last_activity, ws.timestamp
                 ORDER BY last_activity DESC";
         
         $stmt = $db->prepare($sql);

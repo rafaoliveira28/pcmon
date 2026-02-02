@@ -30,9 +30,6 @@ const Login = () => {
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            PC Monitor
-          </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Faça login para acessar o sistema
           </p>
@@ -90,11 +87,6 @@ const Login = () => {
           </div>
 
           <div className="text-sm text-gray-600 text-center">
-            <p>Usuário padrão: <strong>admin</strong></p>
-            <p>Senha padrão: <strong>admin123</strong></p>
-            <p className="mt-2 text-xs text-gray-500">
-              Altere a senha após o primeiro login
-            </p>
           </div>
         </form>
       </div>

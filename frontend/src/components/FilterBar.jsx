@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Filter, X, Clock } from 'lucide-react';
 
-const FilterBar = ({ onFilterChange, showTimeFilters = true }) => {
+const FilterBar = ({ onFilterChange, showTimeFilters = true, hideUserFilter = false, hideDateRangeFilters = false, hideDateFilter = false }) => {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [filters, setFilters] = useState({
     hostname: '',
@@ -71,7 +71,7 @@ const FilterBar = ({ onFilterChange, showTimeFilters = true }) => {
               className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
             >
               <Clock size={16} />
-              {showAdvanced ? 'Ocultar' : 'Filtros de Horário'}
+              {showAdvanced ? 'Ocultar' : 'Filtros Avançados'}
             </button>
           )}
           {hasActiveFilters && (
@@ -100,18 +100,20 @@ const FilterBar = ({ onFilterChange, showTimeFilters = true }) => {
           />
         </div>
         
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Usuário
-          </label>
-          <input
-            type="text"
-            value={filters.username}
-            onChange={(e) => handleChange('username', e.target.value)}
-            placeholder="Ex: joao.santos"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-          />
-        </div>
+        {!hideUserFilter && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Usuário
+            </label>
+            <input
+              type="text"
+              value={filters.username}
+              onChange={(e) => handleChange('username', e.target.value)}
+              placeholder="Ex: joao.santos"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+        )}
         
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -126,47 +128,51 @@ const FilterBar = ({ onFilterChange, showTimeFilters = true }) => {
           />
         </div>
         
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Data
-          </label>
-          <input
-            type="date"
-            value={filters.date}
-            onChange={(e) => handleChange('date', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-          />
-        </div>
+        {!hideDateFilter && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Data
+            </label>
+            <input
+              type="date"
+              value={filters.date}
+              onChange={(e) => handleChange('date', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+        )}
       </div>
 
       {/* Filtros de Horário Avançados */}
       {showTimeFilters && showAdvanced && (
         <div className="mt-6 pt-6 border-t space-y-4">
           {/* Filtros de Data Estendidos */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Data Inicial
-              </label>
-              <input
-                type="date"
-                value={filters.startDate}
-                onChange={(e) => handleChange('startDate', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+          {!hideDateRangeFilters && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Data Inicial
+                </label>
+                <input
+                  type="date"
+                  value={filters.startDate}
+                  onChange={(e) => handleChange('startDate', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Data Final
+                </label>
+                <input
+                  type="date"
+                  value={filters.endDate}
+                  onChange={(e) => handleChange('endDate', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Data Final
-              </label>
-              <input
-                type="date"
-                value={filters.endDate}
-                onChange={(e) => handleChange('endDate', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-          </div>
+          )}
 
           {/* Horário Comercial */}
           <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">

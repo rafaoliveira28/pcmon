@@ -30,7 +30,7 @@ try {
     if ($path === '' || $path === 'api') {
         jsonResponse([
             'success' => true,
-            'message' => 'PC Monitor API',
+            'message' => 'API',
             'version' => API_VERSION,
             'endpoints' => [
                 'POST /api/window-activity' => 'Registrar atividade de janela',

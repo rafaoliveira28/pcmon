@@ -40,7 +40,6 @@ const Layout = () => {
             <h1 className={`text-2xl font-bold text-primary-600 whitespace-nowrap transition-all duration-300 ${
               isSidebarHovered ? 'opacity-100 delay-75' : 'opacity-0 absolute'
             }`}>
-              PC Monitor
             </h1>
             <h1 className={`text-2xl font-bold text-primary-600 text-center transition-all duration-300 ${
               !isSidebarHovered ? 'opacity-100 delay-75' : 'opacity-0 absolute'

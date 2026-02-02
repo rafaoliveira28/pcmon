@@ -97,9 +97,9 @@ const UserAnalytics = () => {
       if (dateRange.start) params.startDate = dateRange.start;
       if (dateRange.end) params.endDate = dateRange.end;
       
-      // Remover filtros vazios
+      // Remover filtros vazios (mas manter false para booleanos)
       Object.keys(params).forEach(key => {
-        if (params[key] === '') delete params[key];
+        if (params[key] === '' || (params[key] === false && key !== 'businessHours')) delete params[key];
       });
       
       const response = await axios.get(`${API_URL}/activity-period-statistics`, { params });
@@ -126,9 +126,9 @@ const UserAnalytics = () => {
         params.app = appFilter;
       }
       
-      // Remover filtros vazios
+      // Remover filtros vazios (mas manter false para booleanos)
       Object.keys(params).forEach(key => {
-        if (params[key] === '') delete params[key];
+        if (params[key] === '' || (params[key] === false && key !== 'businessHours')) delete params[key];
       });
       
       const response = await userService.getApplications(selectedUser, params);
@@ -151,9 +151,9 @@ const UserAnalytics = () => {
         params.end_date = dateRange.end;
       }
       
-      // Remover filtros vazios
+      // Remover filtros vazios (mas manter false para booleanos)
       Object.keys(params).forEach(key => {
-        if (params[key] === '') delete params[key];
+        if (params[key] === '' || (params[key] === false && key !== 'businessHours')) delete params[key];
       });
       
       const response = await userService.getApplicationActivities(selectedUser, executable, params);
@@ -279,7 +279,12 @@ const UserAnalytics = () => {
           </div>
         </div>
         
-        <FilterBar onFilterChange={handleFilterChange} showTimeFilters={true} />
+        <FilterBar 
+          onFilterChange={handleFilterChange} 
+          showTimeFilters={true}
+          hideUserFilter={true}
+          hideDateFilter={true}
+        />
       </div>
       
       {/* Cartões de Estatísticas de Tempo Ativo/Inativo */}
