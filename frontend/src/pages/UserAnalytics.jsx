@@ -7,7 +7,9 @@ import { ptBR } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line } from 'recharts';
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8090/api';
+const API_URL = window.location.hostname === 'localhost' 
+  ? 'http://pcmon.uniware.net.br:8090/api'
+  : 'http://pcmon.uniware.net.br:8090/api';
 const COLORS = ['#0ea5e9', '#8b5cf6', '#f59e0b', '#10b981', '#ef4444', '#6366f1', '#ec4899', '#14b8a6'];
 
 const UserAnalytics = () => {
@@ -93,22 +95,29 @@ const UserAnalytics = () => {
     if (!selectedUser) return;
     
     try {
-      const params = { ...filters, username: selectedUser };
+      const params = { username: selectedUser };
       if (dateRange.start) params.startDate = dateRange.start;
       if (dateRange.end) params.endDate = dateRange.end;
       
-      // Remover filtros vazios (mas manter false para booleanos)
-      Object.keys(params).forEach(key => {
-        if (params[key] === '' || (params[key] === false && key !== 'businessHours')) delete params[key];
-      });
+      // Adicionar outros filtros se existirem
+      if (filters.hostname) params.hostname = filters.hostname;
+      if (filters.executable) params.executable = filters.executable;
+      
+      console.log('Carregando estatísticas com params:', params);
       
       const response = await axios.get(`${API_URL}/activity-period-statistics`, { params });
       
+      console.log('Resposta de estatísticas:', response.data);
+      
       if (response.data.success) {
         setStatistics(response.data.data);
+      } else {
+        console.warn('Resposta sem sucesso:', response.data);
+        setStatistics(null);
       }
     } catch (error) {
       console.error('Erro ao carregar estatísticas:', error);
+      console.error('Detalhes do erro:', error.response?.data);
       setStatistics(null);
     }
   };

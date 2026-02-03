@@ -6,7 +6,9 @@ import Pagination from '../components/Pagination';
 import { windowActivityService } from '../services/api';
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8090/api';
+const API_URL = window.location.hostname === 'localhost' 
+  ? 'http://pcmon.uniware.net.br:8090/api'
+  : 'http://pcmon.uniware.net.br:8090/api';
 
 const Activities = () => {
   const [activities, setActivities] = useState([]);
