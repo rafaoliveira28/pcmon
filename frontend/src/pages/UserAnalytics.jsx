@@ -7,9 +7,7 @@ import { ptBR } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line } from 'recharts';
 import axios from 'axios';
 
-const API_URL = window.location.hostname === 'localhost' 
-  ? 'http://pcmon.uniware.net.br:8090/api'
-  : 'http://pcmon.uniware.net.br:8090/api';
+const API_URL = (import.meta.env.VITE_API_BASE_URL || 'http://pcmon.uniware.net.br:8090') + '/api';
 const COLORS = ['#0ea5e9', '#8b5cf6', '#f59e0b', '#10b981', '#ef4444', '#6366f1', '#ec4899', '#14b8a6'];
 
 const UserAnalytics = () => {

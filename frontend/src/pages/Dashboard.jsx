@@ -93,7 +93,8 @@ const Dashboard = () => {
       // Carregar dados de períodos de atividade (active) e inatividade (inactive)
       try {
         // Buscar períodos ATIVOS
-        const activityResponse = await axios.get('http://localhost:8090/api/activity-periods', {
+        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://pcmon.uniware.net.br:8090';
+        const activityResponse = await axios.get(`${API_BASE_URL}/api/activity-periods`, {
           params: {
             period_type: 'active',
           }
@@ -123,7 +124,7 @@ const Dashboard = () => {
         }
         
         // Buscar períodos INATIVOS
-        const inactivityResponse = await axios.get('http://localhost:8090/api/activity-periods', {
+        const inactivityResponse = await axios.get(`${API_BASE_URL}/api/activity-periods`, {
           params: {
             period_type: 'inactive',
           }

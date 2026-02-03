@@ -3,7 +3,7 @@ import { Settings as SettingsIcon, Users, Plus, Trash2, AlertTriangle } from 'lu
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 
-const API_BASE_URL = 'http://pcmon.uniware.net.br:8090';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://pcmon.uniware.net.br:8090';
 
 const Settings = () => {
   const { user: currentUser } = useAuth();

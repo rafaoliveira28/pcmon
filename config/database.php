@@ -1,14 +1,57 @@
 <?php
+/**
+ * Carrega variáveis de ambiente do arquivo .env
+ */
+function loadEnv($path = __DIR__ . '/../.env') {
+    if (!file_exists($path)) {
+        return false;
+    }
+    
+    $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    
+    foreach ($lines as $line) {
+        // Ignorar comentários
+        if (strpos(trim($line), '#') === 0) {
+            continue;
+        }
+        
+        // Parse linha KEY=VALUE
+        if (strpos($line, '=') !== false) {
+            list($key, $value) = explode('=', $line, 2);
+            $key = trim($key);
+            $value = trim($value);
+            
+            // Remover aspas se existirem
+            if (preg_match('/^(["\'])(.*)\1$/', $value, $matches)) {
+                $value = $matches[2];
+            }
+            
+            // Setar variável de ambiente
+            if (!getenv($key)) {
+                putenv("$key=$value");
+                $_ENV[$key] = $value;
+                $_SERVER[$key] = $value;
+            }
+        }
+    }
+    
+    return true;
+}
+
+// Carregar .env
+loadEnv();
+
 // Configurações de conexão com o banco de dados
-define('DB_HOST', getenv('DB_HOST') ?: '10.1.3.173');
+define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
 define('DB_PORT', getenv('DB_PORT') ?: '3306');
 define('DB_NAME', getenv('DB_NAME') ?: 'unimonitor');
-define('DB_USER', getenv('DB_USER') ?: 'UNIAGENTE');
-define('DB_PASSWORD', getenv('DB_PASSWORD') ?: 'U@1nM0n!');
+define('DB_USER', getenv('DB_USER') ?: 'root');
+define('DB_PASSWORD', getenv('DB_PASSWORD') ?: '');
 
 // Configurações da API
-define('API_VERSION', 'v1');
-define('TIMEZONE', 'America/Sao_Paulo');
+define('API_VERSION', getenv('API_VERSION') ?: 'v1');
+define('TIMEZONE', getenv('TIMEZONE') ?: 'America/Sao_Paulo');
+define('APP_ENV', getenv('APP_ENV') ?: 'production');
 
 // Configurar timezone
 date_default_timezone_set(TIMEZONE);
@@ -26,7 +69,7 @@ function getDBConnection() {
         echo json_encode([
             'success' => false,
             'message' => 'Erro de conexão com o banco de dados',
-            'error' => $e->getMessage()
+            'error' => APP_ENV === 'development' ? $e->getMessage() : 'Erro interno do servidor'
         ]);
         exit;
     }

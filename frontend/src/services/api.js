@@ -1,9 +1,14 @@
 import axios from 'axios';
 
-// Detectar se está rodando em container ou localmente
-const API_BASE_URL = window.location.hostname === 'localhost' 
-  ? 'http://pcmon.uniware.net.br:8090'
-  : 'http://pcmon.uniware.net.br:8090';
+// Ler URL da API do .env ou usar padrão
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://pcmon.uniware.net.br:8090';
+
+// Debug: Mostrar qual URL está sendo usada
+console.log('🔧 API Configuration:', {
+  VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
+  API_BASE_URL: API_BASE_URL,
+  MODE: import.meta.env.MODE
+});
 
 const api = axios.create({
   baseURL: API_BASE_URL,
