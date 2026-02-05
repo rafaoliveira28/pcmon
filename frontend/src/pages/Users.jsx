@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { AlertTriangle, Trash2 } from 'lucide-react';
 import api from '../services/api';
 
 const Users = () => {
@@ -10,6 +11,10 @@ const Users = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [showDeleteRecordsModal, setShowDeleteRecordsModal] = useState(false);
+  const [userToDeleteRecords, setUserToDeleteRecords] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
 
   const [formData, setFormData] = useState({
     username: '',
@@ -142,6 +147,41 @@ const Users = () => {
     }
   };
 
+  const handleDeleteUserRecords = (userId, username) => {
+    setUserToDeleteRecords({ id: userId, username });
+    setShowDeleteRecordsModal(true);
+  };
+
+  const executeDeleteRecords = async () => {
+    if (!userToDeleteRecords) return;
+
+    try {
+      setDeleteLoading(true);
+      const response = await api.delete(`/endpoints/users.php/${userToDeleteRecords.id}/delete-records`);
+      
+      if (response.success) {
+        showMessage('success', `${response.total_deleted} registros deletados com sucesso`);
+        setShowDeleteRecordsModal(false);
+        setUserToDeleteRecords(null);
+        fetchUsers();
+      } else {
+        showMessage('error', response.error || 'Erro ao deletar registros');
+        setShowDeleteRecordsModal(false);
+      }
+    } catch (err) {
+      showMessage('error', 'Erro ao deletar registros');
+      setShowDeleteRecordsModal(false);
+    } finally {
+      setDeleteLoading(false);
+    }
+  };  
+
+  const showMessage = (type, text) => {
+    setMessage({ type, text });
+    setTimeout(() => setMessage({ type: '', text: '' }), 5000);
+  };
+
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -152,6 +192,15 @@ const Users = () => {
 
   return (
     <div className="space-y-6">
+      {/* Mensagem de feedback */}
+      {message.text && (
+        <div className={`mb-6 p-4 rounded-lg ${
+          message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+        }`}>
+          {message.text}
+        </div>
+      )}
+
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900">Gerenciamento de Usuários</h1>
         <button
@@ -233,6 +282,13 @@ const Users = () => {
                         className="text-yellow-600 hover:text-yellow-900"
                       >
                         Resetar Senha
+                      </button>
+                      <button
+                        onClick={() => handleDeleteUserRecords(user.id, user.username)}
+                        className="text-gray-400 hover:text-orange-600 text-sm"
+                        title="Deletar todos os registros de atividade"
+                      >
+                        🗑️
                       </button>
                       <button
                         onClick={() => handleDeleteUser(user.id, user.username)}
@@ -382,6 +438,83 @@ const Users = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Exclusão de Registros */}
+      {showDeleteRecordsModal && userToDeleteRecords && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg max-w-md w-full shadow-2xl">
+            <div className="p-6 rounded-t-lg bg-orange-50">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-full bg-orange-100">
+                  <AlertTriangle size={32} className="text-orange-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">
+                    Confirmar Exclusão de Registros
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Esta ação não pode ser desfeita
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <div className="space-y-4">
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                  <p className="text-sm text-orange-800 font-semibold mb-2">
+                    ⚠️ ATENÇÃO: AÇÃO IRREVERSÍVEL
+                  </p>
+                  <p className="text-sm text-orange-700">
+                    Você está prestes a apagar <strong>TODOS os registros de atividade</strong> do usuário:
+                  </p>
+                </div>
+                <div className="bg-gray-100 rounded-lg p-4">
+                  <p className="text-sm font-semibold text-gray-900">
+                    {userToDeleteRecords.username}
+                  </p>
+                </div>
+                <p className="text-sm text-gray-700">
+                  Todos os dados de atividades, períodos, snapshots e histórico serão permanentemente removidos.
+                </p>
+                <p className="text-sm text-gray-700 font-semibold">
+                  Tem certeza que deseja continuar?
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3 p-6 bg-gray-50 rounded-b-lg">
+              <button
+                onClick={() => {
+                  setShowDeleteRecordsModal(false);
+                  setUserToDeleteRecords(null);
+                }}
+                disabled={deleteLoading}
+                className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={executeDeleteRecords}
+                disabled={deleteLoading}
+                className="flex-1 px-4 py-2 text-white rounded-lg transition-colors disabled:opacity-50 bg-orange-600 hover:bg-orange-700"
+              >
+                {deleteLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Excluindo...
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center gap-2">
+                    <Trash2 size={16} />
+                    Confirmar Exclusão
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

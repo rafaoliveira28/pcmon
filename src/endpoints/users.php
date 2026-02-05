@@ -363,6 +363,70 @@ function resetPassword($db, $userId, $data) {
     }
 }
 
+// Deletar registros de atividade de um usuário (admin)
+function deleteUserRecords($db, $userId) {
+    $admin = requireAdmin($db);
+    
+    try {
+        // Buscar informações do usuário
+        $stmt = $db->prepare("SELECT username FROM users WHERE id = :id");
+        $stmt->execute([':id' => $userId]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$user) {
+            http_response_code(404);
+            return [
+                'success' => false,
+                'error' => 'Usuário não encontrado'
+            ];
+        }
+        
+        $username = $user['username'];
+        $deletedRows = [];
+        
+        $db->beginTransaction();
+        
+        // Deletar de todas as tabelas de atividade
+        $tables = [
+            'activity_events',
+            'activity_periods',
+            'daily_activity_summary',
+            'last_mouse_activity',
+            'windows_snapshot'
+        ];
+        
+        foreach ($tables as $table) {
+            $stmt = $db->prepare("DELETE FROM `$table` WHERE username = :username");
+            $stmt->execute([':username' => $username]);
+            $deletedRows[$table] = $stmt->rowCount();
+        }
+        
+        $db->commit();
+        
+        $totalDeleted = array_sum($deletedRows);
+        
+        logUserActivity($db, $admin['id'], 'user_records_delete', 
+            "Deletou $totalDeleted registros de atividade do usuário: $username");
+        
+        return [
+            'success' => true,
+            'message' => "Registros de atividade deletados com sucesso",
+            'deleted_by_table' => $deletedRows,
+            'total_deleted' => $totalDeleted
+        ];
+        
+    } catch (PDOException $e) {
+        if ($db->inTransaction()) {
+            $db->rollBack();
+        }
+        http_response_code(500);
+        return [
+            'success' => false,
+            'error' => 'Erro ao deletar registros: ' . $e->getMessage()
+        ];
+    }
+}
+
 // Deletar usuário (admin)
 function deleteUser($db, $userId) {
     $admin = requireAdmin($db);
@@ -435,6 +499,9 @@ if ($userId && $action) {
             break;
         case 'reset-password':
             $result = ($method === 'PUT') ? resetPassword($db, $userId, $data) : ['success' => false, 'error' => 'Método não permitido'];
+            break;
+        case 'delete-records':
+            $result = ($method === 'DELETE') ? deleteUserRecords($db, $userId) : ['success' => false, 'error' => 'Método não permitido'];
             break;
         default:
             http_response_code(404);

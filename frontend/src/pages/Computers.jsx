@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Monitor, Circle, RefreshCw, Eye, X, Activity, Clock, TrendingUp, Maximize2 } from 'lucide-react';
+import { Monitor, Circle, RefreshCw, Eye, X, Activity, Clock, TrendingUp, Maximize2, Trash2, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { computerService } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const Computers = () => {
+  const { user: currentUser } = useAuth();
   const [computers, setComputers] = useState([]);
   const [filteredComputers, setFilteredComputers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,6 +19,10 @@ const Computers = () => {
   const [activityLoading, setActivityLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [selectedWindow, setSelectedWindow] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [computerToDelete, setComputerToDelete] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
 
   const loadComputers = useCallback(async (showLoading = true) => {
     try {
@@ -119,6 +125,60 @@ const Computers = () => {
     setSelectedWindow(null);
   };
 
+  const handleDeleteComputerRecords = (computer) => {
+    setComputerToDelete(computer);
+    setShowDeleteModal(true);
+  };
+
+  const executeDelete = async () => {
+    if (!computerToDelete) return;
+
+    try {
+      setDeleteLoading(true);
+      const response = await fetch(
+        `/api/computers/${encodeURIComponent(computerToDelete.hostname)}/${encodeURIComponent(computerToDelete.username)}/delete-records`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+
+      if (!response.ok) {
+        const text = await response.text();
+        console.error('Erro do servidor:', text);
+        showMessage('error', 'Erro ao deletar registros: ' + response.status);
+        setShowDeleteModal(false);
+        return;
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        showMessage('success', `${data.total_deleted} registros deletados com sucesso`);
+        setShowDeleteModal(false);
+        setComputerToDelete(null);
+        loadComputers();
+      } else {
+        showMessage('error', data.message || 'Erro ao deletar registros');
+        setShowDeleteModal(false);
+      }
+    } catch (err) {
+      console.error('Erro ao deletar registros:', err);
+      showMessage('error', 'Erro ao deletar registros');
+      setShowDeleteModal(false);
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const showMessage = (type, text) => {
+    setMessage({ type, text });
+    setTimeout(() => setMessage({ type: '', text: '' }), 5000);
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'active': return 'text-green-600 bg-green-100';
@@ -166,6 +226,15 @@ const Computers = () => {
 
   return (
     <div className="w-full px-6 py-8" style={{ maxWidth: '90vw', margin: '0 auto' }}>
+      {/* Mensagem de feedback */}
+      {message.text && (
+        <div className={`mb-6 p-4 rounded-lg ${
+          message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+        }`}>
+          {message.text}
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Computadores</h1>
@@ -253,7 +322,7 @@ const Computers = () => {
           {filteredComputers.map((computer) => (
             <div
               key={`${computer.hostname}-${computer.username}`}
-              className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
+              className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow relative"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
@@ -267,10 +336,24 @@ const Computers = () => {
                     <p className="text-sm text-gray-500">{computer.username}</p>
                   </div>
                 </div>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(computer.status)}`}>
-                  <Circle size={8} fill="currentColor" />
-                  {getStatusLabel(computer.status)}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(computer.status)}`}>
+                    <Circle size={8} fill="currentColor" />
+                    {getStatusLabel(computer.status)}
+                  </span>
+                  {currentUser?.is_admin && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteComputerRecords(computer);
+                      }}
+                      className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                      title="Deletar todos os registros de atividade"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-2 text-sm mb-4">
@@ -546,6 +629,86 @@ const Computers = () => {
                 className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
               >
                 Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Exclusão */}
+      {showDeleteModal && computerToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full shadow-2xl">
+            <div className="p-6 rounded-t-lg bg-orange-50">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-full bg-orange-100">
+                  <AlertTriangle size={32} className="text-orange-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">
+                    Confirmar Exclusão de Registros
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Esta ação não pode ser desfeita
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <div className="space-y-4">
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                  <p className="text-sm text-orange-800 font-semibold mb-2">
+                    ⚠️ ATENÇÃO: AÇÃO IRREVERSÍVEL
+                  </p>
+                  <p className="text-sm text-orange-700">
+                    Você está prestes a apagar <strong>TODOS os registros de atividade</strong> do computador:
+                  </p>
+                </div>
+                <div className="bg-gray-100 rounded-lg p-4">
+                  <p className="text-sm font-mono font-semibold text-gray-900">
+                    {computerToDelete.hostname}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Usuário: <span className="font-semibold">{computerToDelete.username}</span>
+                  </p>
+                </div>
+                <p className="text-sm text-gray-700">
+                  Todos os dados de atividades, períodos, snapshots e histórico serão permanentemente removidos.
+                </p>
+                <p className="text-sm text-gray-700 font-semibold">
+                  Tem certeza que deseja continuar?
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3 p-6 bg-gray-50 rounded-b-lg">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setComputerToDelete(null);
+                }}
+                disabled={deleteLoading}
+                className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={executeDelete}
+                disabled={deleteLoading}
+                className="flex-1 px-4 py-2 text-white rounded-lg transition-colors disabled:opacity-50 bg-orange-600 hover:bg-orange-700"
+              >
+                {deleteLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Excluindo...
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center gap-2">
+                    <Trash2 size={16} />
+                    Confirmar Exclusão
+                  </span>
+                )}
               </button>
             </div>
           </div>

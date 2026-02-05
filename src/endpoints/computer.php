@@ -220,3 +220,60 @@ function getRecentActivities($db, $hostname, $username, $params) {
         ], 500);
     }
 }
+
+// Deletar todos os registros de atividade de um computador (admin)
+function deleteComputerRecords($db, $hostname, $username) {
+    require_once __DIR__ . '/../middleware/auth.php';
+    $admin = requireAdmin($db);
+    
+    try {
+        $deletedRows = [];
+        
+        $db->beginTransaction();
+        
+        // Deletar de todas as tabelas de atividade
+        $tables = [
+            'activity_events',
+            'activity_periods',
+            'daily_activity_summary',
+            'last_mouse_activity',
+            'windows_snapshot'
+        ];
+        
+        foreach ($tables as $table) {
+            $stmt = $db->prepare("DELETE FROM `$table` WHERE hostname = :hostname AND username = :username");
+            $stmt->execute([
+                ':hostname' => $hostname,
+                ':username' => $username
+            ]);
+            $deletedRows[$table] = $stmt->rowCount();
+        }
+        
+        $db->commit();
+        
+        $totalDeleted = array_sum($deletedRows);
+        
+        // Log da ação
+        require_once __DIR__ . '/../middleware/auth.php';
+        logUserActivity($db, $admin['id'], 'computer_records_delete', 
+            "Deletou $totalDeleted registros de atividade do computador: $hostname ($username)");
+        
+        jsonResponse([
+            'success' => true,
+            'message' => "Registros de atividade deletados com sucesso",
+            'deleted_by_table' => $deletedRows,
+            'total_deleted' => $totalDeleted
+        ]);
+        
+    } catch (PDOException $e) {
+        if ($db->inTransaction()) {
+            $db->rollBack();
+        }
+        jsonResponse([
+            'success' => false,
+            'message' => 'Erro ao deletar registros',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
+

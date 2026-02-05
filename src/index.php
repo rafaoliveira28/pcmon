@@ -138,6 +138,12 @@ try {
         getRecentActivities($db, urldecode($matches[1]), urldecode($matches[2]), $_GET);
     }
     
+    // Deletar registros de atividade de um computador (admin)
+    elseif (preg_match('#^(api/)?computers/([^/]+)/([^/]+)/delete-records$#', $path, $matches) && $method === 'DELETE') {
+        require_once __DIR__ . '/endpoints/computer.php';
+        deleteComputerRecords($db, urldecode($matches[2]), urldecode($matches[3]));
+    }
+    
     // Obter snapshot de janelas abertas de um computador
     elseif (preg_match('#^api/computers/([^/]+)/([^/]+)/windows-snapshot$#', $path, $matches) && $method === 'GET') {
         require_once __DIR__ . '/endpoints/windows-snapshot.php';
