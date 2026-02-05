@@ -302,75 +302,87 @@ function getActivityPeriodStatistics($db, $params) {
         }
         
         if (isset($params['endDate'])) {
-            $where[] = "DATE(start_time) <= :end_date";
+            $where[] = "DATE(end_time) <= :end_date";
             $bindings[':end_date'] = $params['endDate'];
         }
         
-        // Filtro de horário comercial (8:00 - 18:00)
-        if (isset($params['businessHours']) && $params['businessHours'] === 'true') {
-            $where[] = "(TIME(start_time) >= '08:00:00' AND TIME(start_time) < '18:00:00')";
-        }
-        
-        // Filtro de horário personalizado
-        if (isset($params['startTime']) && !empty($params['startTime'])) {
-            $where[] = "TIME(start_time) >= :start_time";
-            $bindings[':start_time'] = $params['startTime'];
-        }
-        
-        if (isset($params['endTime']) && !empty($params['endTime'])) {
-            $where[] = "TIME(start_time) < :end_time";
-            $bindings[':end_time'] = $params['endTime'];
-        }
-        
-        // Filtro para ignorar horário específico (ex: almoço)
-        if (isset($params['ignoreTimeFrom']) && isset($params['ignoreTimeTo']) && 
-            !empty($params['ignoreTimeFrom']) && !empty($params['ignoreTimeTo'])) {
-            $where[] = "NOT (TIME(start_time) >= :ignore_from AND TIME(start_time) < :ignore_to)";
-            $bindings[':ignore_from'] = $params['ignoreTimeFrom'];
-            $bindings[':ignore_to'] = $params['ignoreTimeTo'];
-        }
+        // Apenas períodos inativos
+        $where[] = "period_type = 'inactive'";
         
         $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
         
-        // Buscar estatísticas de períodos de atividade
+        // Buscar todos os períodos inativos
         $sql = "SELECT 
-                    period_type,
-                    SUM(duration_seconds) as total_seconds,
-                    COUNT(*) as total_periods
+                    start_time,
+                    end_time,
+                    duration_seconds
                 FROM activity_periods 
                 $whereClause
-                GROUP BY period_type";
+                ORDER BY start_time";
         
         $stmt = $db->prepare($sql);
         $stmt->execute($bindings);
-        $periods = $stmt->fetchAll();
+        $periods = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        $activeSeconds = 0;
+        // Determinar filtros de horário
+        $useBusinessHours = isset($params['businessHours']) && $params['businessHours'] === 'true';
+        $startTime = $useBusinessHours ? '08:00:00' : ($params['startTime'] ?? null);
+        $endTime = $useBusinessHours ? '18:00:00' : ($params['endTime'] ?? null);
+        $ignoreFrom = ($params['ignoreTimeFrom'] ?? null);
+        $ignoreTo = ($params['ignoreTimeTo'] ?? null);
+        
         $inactiveSeconds = 0;
-        $activePeriods = 0;
         $inactivePeriods = 0;
         
         foreach ($periods as $period) {
-            if ($period['period_type'] === 'active') {
-                $activeSeconds = (int)$period['total_seconds'];
-                $activePeriods = (int)$period['total_periods'];
-            } else {
-                $inactiveSeconds = (int)$period['total_seconds'];
-                $inactivePeriods = (int)$period['total_periods'];
+            $periodStart = strtotime($period['start_time']);
+            $periodEnd = strtotime($period['end_time']);
+            $periodDate = date('Y-m-d', $periodStart);
+            
+            // Aplicar filtros de horário
+            if ($startTime || $endTime) {
+                $dayStart = strtotime($periodDate . ' ' . ($startTime ?? '00:00:00'));
+                $dayEnd = strtotime($periodDate . ' ' . ($endTime ?? '23:59:59'));
+                
+                // Período fora do range completamente - pular
+                if ($periodEnd <= $dayStart || $periodStart >= $dayEnd) {
+                    continue;
+                }
+                
+                // Ajustar período para caber no range
+                $periodStart = max($periodStart, $dayStart);
+                $periodEnd = min($periodEnd, $dayEnd);
+            }
+            
+            // Calcular duração válida
+            $validSeconds = $periodEnd - $periodStart;
+            
+            // Subtrair horário ignorado (ex: almoço)
+            if ($ignoreFrom && $ignoreTo && $validSeconds > 0) {
+                $ignoreStart = strtotime($periodDate . ' ' . $ignoreFrom);
+                $ignoreEnd = strtotime($periodDate . ' ' . $ignoreTo);
+                
+                // Verificar se há overlap com horário ignorado
+                $overlapStart = max($periodStart, $ignoreStart);
+                $overlapEnd = min($periodEnd, $ignoreEnd);
+                
+                if ($overlapStart < $overlapEnd) {
+                    // Há overlap - subtrair
+                    $validSeconds -= ($overlapEnd - $overlapStart);
+                }
+            }
+            
+            // Somar ao total se ainda houver tempo válido
+            if ($validSeconds > 0) {
+                $inactiveSeconds += $validSeconds;
+                $inactivePeriods++;
             }
         }
-        
-        $totalSeconds = $activeSeconds + $inactiveSeconds;
-        $activePercentage = $totalSeconds > 0 ? ($activeSeconds / $totalSeconds * 100) : 0;
         
         jsonResponse([
             'success' => true,
             'data' => [
-                'active_seconds' => $activeSeconds,
                 'inactive_seconds' => $inactiveSeconds,
-                'total_seconds' => $totalSeconds,
-                'active_percentage' => round($activePercentage, 2),
-                'active_periods' => $activePeriods,
                 'inactive_periods' => $inactivePeriods
             ]
         ]);

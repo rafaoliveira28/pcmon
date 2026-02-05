@@ -198,6 +198,12 @@ try {
         compareUsers($db, $_GET);
     }
     
+    // Top aplicativos por tempo de uso
+    elseif ($path === 'api/top-applications' && $method === 'GET') {
+        require_once __DIR__ . '/endpoints/top-applications.php';
+        getTopApplications($db, $_GET);
+    }
+    
     // Limpar todos os dados
     elseif ($path === 'api/cleanup/all' && $method === 'DELETE') {
         require_once __DIR__ . '/endpoints/cleanup.php';

@@ -11,8 +11,8 @@ const Dashboard = () => {
   const [activities, setActivities] = useState([]);
   const [computers, setComputers] = useState([]);
   const [activityStatus, setActivityStatus] = useState([]);
-  const [userActivityData, setUserActivityData] = useState([]);
   const [userInactivityData, setUserInactivityData] = useState([]);
+  const [topAppsData, setTopAppsData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalActivities: 0,
@@ -30,7 +30,7 @@ const Dashboard = () => {
     try {
       setLoading(true);
       
-      // Carregar últimas atividades
+      // Carregar últimas atividades (para contagem de apps ativos)
       const activitiesResponse = await windowActivityService.getAll({ 
         limit: 50,
         page: 1 
@@ -63,7 +63,7 @@ const Dashboard = () => {
         }));
       }
       
-      if (statusResponse.success) {
+      if (statusResponse.success && activitiesResponse.success) {
         setActivityStatus(statusResponse.data);
         // Contar usuários ativos (status = active)
         const activeUsers = new Set(
@@ -90,38 +90,9 @@ const Dashboard = () => {
         }));
       }
       
-      // Carregar dados de períodos de atividade (active) e inatividade (inactive)
+      // Carregar dados de períodos de inatividade
       try {
-        // Buscar períodos ATIVOS
         const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://pcmon.uniware.net.br:8090';
-        const activityResponse = await axios.get(`${API_BASE_URL}/api/activity-periods`, {
-          params: {
-            period_type: 'active',
-          }
-        });
-        
-        if (activityResponse.data.success) {
-          // Agregar tempo de atividade por usuário
-          const activityByUser = {};
-          activityResponse.data.data.forEach(period => {
-            const key = period.username;
-            if (!activityByUser[key]) {
-              activityByUser[key] = 0;
-            }
-            activityByUser[key] += parseInt(period.duration_seconds) || 0;
-          });
-          
-          // Top 5 usuários com mais tempo ativo
-          const topActive = Object.entries(activityByUser)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 5)
-            .map(([username, seconds]) => ({
-              name: username,
-              hours: parseFloat((seconds / 3600).toFixed(2)),
-            }));
-          
-          setUserActivityData(topActive);
-        }
         
         // Buscar períodos INATIVOS
         const inactivityResponse = await axios.get(`${API_BASE_URL}/api/activity-periods`, {
@@ -152,6 +123,23 @@ const Dashboard = () => {
           
           setUserInactivityData(topInactive);
         }
+        
+        // Buscar Top 5 aplicativos por tempo de uso
+        const topAppsResponse = await axios.get(`${API_BASE_URL}/api/top-applications`, {
+          params: {
+            limit: 5
+          }
+        });
+        
+        if (topAppsResponse.data.success) {
+          const topApps = topAppsResponse.data.data.map(app => ({
+            name: app.executable.replace('.exe', '').substring(0, 15),
+            value: parseFloat((parseInt(app.total_seconds) / 3600).toFixed(2)), // Converter para horas
+            seconds: parseInt(app.total_seconds)
+          }));
+          
+          setTopAppsData(topApps);
+        }
       } catch (error) {
         console.error('Erro ao carregar dados de atividade/inatividade:', error);
       }
@@ -163,26 +151,8 @@ const Dashboard = () => {
     }
   };
 
-  // Preparar dados para o gráfico - agregar por aplicativo
-  const appTimes = {};
-  activities.forEach(activity => {
-    const app = activity.executable;
-    const duration = parseFloat(activity.duration_second) || 0;
-    if (appTimes[app]) {
-      appTimes[app] += duration;
-    } else {
-      appTimes[app] = duration;
-    }
-  });
-  
-  const chartData = Object.entries(appTimes)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([app, seconds]) => ({
-      name: app.replace('.exe', '').substring(0, 15),
-      value: parseFloat((seconds / 60).toFixed(2)), // Converter para minutos
-      seconds: seconds
-    }));
+  // Dados do gráfico já vêm prontos do backend
+  const chartData = topAppsData;
 
   return (
     <div className="w-full px-6 py-8" style={{ maxWidth: '90vw', margin: '0 auto' }}>
@@ -225,37 +195,16 @@ const Dashboard = () => {
       {/* Gráfico */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">
-          Top 5 Aplicativos por Tempo de Uso (minutos)
+          Top 5 Aplicativos por Tempo de Uso (horas)
         </h2>
         <ActivityChart data={chartData} type="bar" />
       </div>
 
-      {/* Gráfico de Tempo de Atividade dos Usuários */}
-      {userActivityData.length > 0 && (
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">
-            Top 5 Usuários por Tempo de Atividade (horas)
-          </h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={userActivityData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis label={{ value: 'Horas', angle: -90, position: 'insideLeft' }} />
-              <Tooltip 
-                formatter={(value) => [`${value}h`, 'Tempo Ativo']}
-                labelStyle={{ color: '#374151' }}
-              />
-              <Bar dataKey="hours" fill="#8b5cf6" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-      
-      {/* Gráfico de Tempo de Inatividade dos Usuários */}
+      {/* Grafico de Tempo de Inatividade dos Usuarios */}
       {userInactivityData.length > 0 && (
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">
-            Top 5 Usuários por Tempo de Inatividade (horas)
+            Top 5 Usuarios por Tempo de Inatividade (horas)
           </h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={userInactivityData}>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, Clock, CheckCircle, XCircle, Printer } from 'lucide-react';
+import { RefreshCw, XCircle, Printer } from 'lucide-react';
 import FilterBar from '../components/FilterBar';
 import ActivityTable from '../components/ActivityTable';
 import Pagination from '../components/Pagination';
@@ -129,43 +129,6 @@ const Activities = () => {
       <FilterBar onFilterChange={handleFilterChange} hideDateFilter={true} />
 
       {/* Cartões de Estatísticas */}
-      {statistics && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100 text-sm font-medium">Tempo Ativo</p>
-                <h3 className="text-3xl font-bold mt-2">{formatDuration(statistics.active_seconds)}</h3>
-                <p className="text-green-100 text-sm mt-1">{statistics.active_periods} períodos</p>
-              </div>
-              <CheckCircle size={48} className="opacity-80" />
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-lg shadow-lg p-6 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-red-100 text-sm font-medium">Tempo Inativo</p>
-                <h3 className="text-3xl font-bold mt-2">{formatDuration(statistics.inactive_seconds)}</h3>
-                <p className="text-red-100 text-sm mt-1">{statistics.inactive_periods} períodos</p>
-              </div>
-              <XCircle size={48} className="opacity-80" />
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm font-medium">Taxa de Atividade</p>
-                <h3 className="text-3xl font-bold mt-2">{statistics.active_percentage.toFixed(1)}%</h3>
-                <p className="text-blue-100 text-sm mt-1">Total: {formatDuration(statistics.total_seconds)}</p>
-              </div>
-              <Clock size={48} className="opacity-80" />
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-gray-800">

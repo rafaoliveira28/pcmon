@@ -88,7 +88,7 @@ class ActivityMonitor:
             logging.error(f"Erro ao enviar mouse activity: {str(e)}")
     
     def check_and_update_activity_period(self):
-        """Verifica mudanças de estado (ativo/inativo) e registra períodos"""
+        """Verifica mudanças de estado (ativo/inativo) e registra APENAS períodos inativos"""
         try:
             idle_seconds = self.get_last_input_time()
             current_state = 'active' if idle_seconds < self.idle_threshold else 'inactive'
@@ -97,12 +97,12 @@ class ActivityMonitor:
             if self.current_period_type != current_state:
                 now = datetime.now()
                 
-                # Finalizar período anterior se existir
-                if self.current_period_type is not None and self.current_period_start is not None:
+                # Finalizar período anterior SE FOR INATIVO
+                if self.current_period_type == 'inactive' and self.current_period_start is not None:
                     duration = (now - self.current_period_start).total_seconds()
                     if duration >= 1:  # Só registra se durou pelo menos 1 segundo
                         self.send_activity_period(
-                            self.current_period_type,
+                            'inactive',
                             self.current_period_start,
                             now,
                             int(duration)
@@ -119,13 +119,13 @@ class ActivityMonitor:
             logging.error(f"Erro ao verificar período de atividade: {str(e)}")
     
     def send_activity_period(self, period_type, start_time, end_time, duration_seconds):
-        """Envia período de atividade/inatividade para o servidor"""
+        """Envia período de INATIVIDADE para o servidor"""
         try:
             url = f"{self.config.API_URL}/api/activity-periods"
             data = {
                 'hostname': self.hostname,
                 'username': self.username,
-                'period_type': period_type,
+                'period_type': 'inactive',  # Sempre inativo
                 'start_time': start_time.strftime('%Y-%m-%d %H:%M:%S'),
                 'end_time': end_time.strftime('%Y-%m-%d %H:%M:%S'),
                 'duration_seconds': duration_seconds

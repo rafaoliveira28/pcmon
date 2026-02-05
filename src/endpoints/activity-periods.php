@@ -98,15 +98,12 @@ function updateDailySummary($db, $data, $startTime) {
     try {
         $date = date('Y-m-d', strtotime($startTime));
         
+        // Apenas registra tempo inativo, não mais tempo ativo
         $sql = "INSERT INTO daily_activity_summary 
                 (hostname, username, date, total_active_seconds, total_inactive_seconds, first_activity, last_activity) 
-                VALUES (:hostname, :username, :date, 
-                        CASE WHEN :period_type = 'active' THEN :duration ELSE 0 END,
-                        CASE WHEN :period_type = 'inactive' THEN :duration ELSE 0 END,
-                        :start_time, :end_time)
+                VALUES (:hostname, :username, :date, 0, :duration, :start_time, :end_time)
                 ON DUPLICATE KEY UPDATE 
-                    total_active_seconds = total_active_seconds + CASE WHEN :period_type2 = 'active' THEN :duration2 ELSE 0 END,
-                    total_inactive_seconds = total_inactive_seconds + CASE WHEN :period_type2 = 'inactive' THEN :duration2 ELSE 0 END,
+                    total_inactive_seconds = total_inactive_seconds + :duration2,
                     first_activity = LEAST(COALESCE(first_activity, :start_time2), :start_time2),
                     last_activity = GREATEST(COALESCE(last_activity, :end_time2), :end_time2),
                     updated_at = CURRENT_TIMESTAMP";
@@ -116,8 +113,6 @@ function updateDailySummary($db, $data, $startTime) {
             ':hostname' => $data['hostname'],
             ':username' => $data['username'],
             ':date' => $date,
-            ':period_type' => $data['period_type'],
-            ':period_type2' => $data['period_type'],
             ':duration' => $data['duration_seconds'],
             ':duration2' => $data['duration_seconds'],
             ':start_time' => $startTime,

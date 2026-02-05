@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { User, TrendingUp, Clock, Calendar, Activity, BarChart3, Zap, CheckCircle, XCircle, Printer } from 'lucide-react';
+import { User, TrendingUp, Clock, Calendar, BarChart3, Zap, XCircle, Printer } from 'lucide-react';
 import { userService } from '../services/api';
 import FilterBar from '../components/FilterBar';
 import { format } from 'date-fns';
@@ -97,25 +97,26 @@ const UserAnalytics = () => {
       if (dateRange.start) params.startDate = dateRange.start;
       if (dateRange.end) params.endDate = dateRange.end;
       
-      // Adicionar outros filtros se existirem
+      // Adicionar filtros de hostname/executable
       if (filters.hostname) params.hostname = filters.hostname;
       if (filters.executable) params.executable = filters.executable;
       
-      console.log('Carregando estatísticas com params:', params);
+      // Adicionar filtros de horário
+      if (filters.businessHours) params.businessHours = 'true';
+      if (filters.startTime) params.startTime = filters.startTime;
+      if (filters.endTime) params.endTime = filters.endTime;
+      if (filters.ignoreTimeFrom) params.ignoreTimeFrom = filters.ignoreTimeFrom;
+      if (filters.ignoreTimeTo) params.ignoreTimeTo = filters.ignoreTimeTo;
       
       const response = await axios.get(`${API_URL}/activity-period-statistics`, { params });
-      
-      console.log('Resposta de estatísticas:', response.data);
       
       if (response.data.success) {
         setStatistics(response.data.data);
       } else {
-        console.warn('Resposta sem sucesso:', response.data);
         setStatistics(null);
       }
     } catch (error) {
       console.error('Erro ao carregar estatísticas:', error);
-      console.error('Detalhes do erro:', error.response?.data);
       setStatistics(null);
     }
   };
@@ -291,29 +292,19 @@ const UserAnalytics = () => {
           showTimeFilters={true}
           hideUserFilter={true}
           hideDateFilter={true}
+          hideDateRangeFilters={true}
         />
       </div>
       
-      {/* Cartões de Estatísticas de Tempo Ativo/Inativo */}
-      {statistics && (
+      {/* Cartões de Estatísticas */}
+      {statistics && userStats && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white">
+          <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-lg p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-green-100 text-sm font-medium">Tempo Ativo</p>
-                <h3 className="text-3xl font-bold mt-2">{formatTime(statistics.active_seconds)}</h3>
-                <p className="text-green-100 text-sm mt-1">{statistics.active_periods} períodos</p>
-              </div>
-              <CheckCircle size={48} className="opacity-80" />
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-lg shadow-lg p-6 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-red-100 text-sm font-medium">Tempo Inativo</p>
+                <p className="text-orange-100 text-sm font-medium">Tempo Inativo</p>
                 <h3 className="text-3xl font-bold mt-2">{formatTime(statistics.inactive_seconds)}</h3>
-                <p className="text-red-100 text-sm mt-1">{statistics.inactive_periods} períodos</p>
+                <p className="text-orange-100 text-sm mt-1">{statistics.inactive_periods} períodos de inatividade</p>
               </div>
               <XCircle size={48} className="opacity-80" />
             </div>
@@ -322,11 +313,22 @@ const UserAnalytics = () => {
           <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-100 text-sm font-medium">Taxa de Atividade</p>
-                <h3 className="text-3xl font-bold mt-2">{statistics.active_percentage.toFixed(1)}%</h3>
-                <p className="text-blue-100 text-sm mt-1">Total: {formatTime(statistics.total_seconds)}</p>
+                <p className="text-blue-100 text-sm font-medium">Tempo Total</p>
+                <p className="text-3xl font-bold mt-2">{formatHours(userStats.general.total_time_seconds)}h</p>
+                <p className="text-blue-100 text-xs mt-1">{userStats.general.total_activities} atividades</p>
               </div>
-              <Clock size={48} className="opacity-80" />
+              <Clock className="opacity-50" size={48} />
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm font-medium">Sessão Média</p>
+                <p className="text-3xl font-bold mt-2">{formatDuration(userStats.general.avg_session_seconds)}</p>
+                <p className="text-green-100 text-xs mt-1">por atividade</p>
+              </div>
+              <Zap className="opacity-50" size={48} />
             </div>
           </div>
         </div>
@@ -334,42 +336,6 @@ const UserAnalytics = () => {
 
       {userStats && (
         <>
-          {/* Cards de Resumo */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-blue-100 text-sm font-medium">Tempo Total</p>
-                  <p className="text-3xl font-bold mt-2">{formatHours(userStats.general.total_time_seconds)}h</p>
-                  <p className="text-blue-100 text-xs mt-1">{userStats.general.total_activities} atividades</p>
-                </div>
-                <Clock className="opacity-50" size={48} />
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-lg p-6 text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-purple-100 text-sm font-medium">Aplicativos Únicos</p>
-                  <p className="text-3xl font-bold mt-2">{userStats.general.unique_apps}</p>
-                  <p className="text-purple-100 text-xs mt-1">programas diferentes</p>
-                </div>
-                <Activity className="opacity-50" size={48} />
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-green-100 text-sm font-medium">Sessão Média</p>
-                  <p className="text-3xl font-bold mt-2">{formatDuration(userStats.general.avg_session_seconds)}</p>
-                  <p className="text-green-100 text-xs mt-1">por atividade</p>
-                </div>
-                <Zap className="opacity-50" size={48} />
-              </div>
-            </div>
-          </div>
-
           {/* Top 10 Aplicativos - Gráfico de Barras */}
           {userStats.top_apps.length > 0 && (
             <div className="bg-white rounded-lg shadow-md p-6 mb-8">

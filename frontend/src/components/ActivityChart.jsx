@@ -11,13 +11,8 @@ const ActivityChart = ({ data, type = 'bar' }) => {
       </div>
     );  }
   
-  const formatTime = (minutes) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = Math.floor(minutes % 60);
-    if (hours > 0) {
-      return `${hours}h ${mins}m`;
-    }
-    return `${mins}m`;
+  const formatTime = (hours) => {
+    return `${hours.toFixed(2)}h`;
   };
   
   const CustomTooltip = ({ active, payload }) => {
@@ -70,7 +65,7 @@ const ActivityChart = ({ data, type = 'bar' }) => {
           interval={0}
           tick={{ fontSize: 11 }}
         />
-        <YAxis label={{ value: 'Minutos', angle: -90, position: 'insideLeft' }} />
+        <YAxis label={{ value: 'Horas', angle: -90, position: 'insideLeft' }} />
         <Tooltip content={<CustomTooltip />} />
         <Bar dataKey="value" fill="#0ea5e9" />
       </BarChart>
