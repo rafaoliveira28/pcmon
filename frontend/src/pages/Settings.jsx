@@ -384,7 +384,7 @@ const Settings = () => {
                         Limpar Dados Antigos
                       </h4>
                       <p className="text-sm text-gray-600 mb-3">
-                        Remove registros com <strong>mais de 30 dias</strong> das seguintes tabelas:
+                        Remove registros com <strong>mais de 7 dias</strong> das seguintes tabelas:
                       </p>
                     </div>
                   </div>
@@ -505,7 +505,7 @@ const Settings = () => {
                       ⚠️ Dados Antigos Serão Removidos
                     </p>
                     <p className="text-sm text-yellow-700">
-                      Registros com <strong>mais de 30 dias</strong> serão permanentemente excluídos.
+                      Registros com <strong>mais de 7 dias</strong> serão permanentemente excluídos.
                     </p>
                   </div>
                   <p className="text-sm text-gray-700">

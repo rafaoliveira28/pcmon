@@ -49,7 +49,7 @@ function cleanupOldData($db) {
         // Limpar activity_events
         $stmt = $db->prepare("
             DELETE FROM activity_events 
-            WHERE start_time < DATE_SUB(NOW(), INTERVAL 30 DAY)
+            WHERE start_time < DATE_SUB(NOW(), INTERVAL 7 DAY)
         ");
         $stmt->execute();
         $deletedRows['activity_events'] = $stmt->rowCount();
@@ -57,7 +57,7 @@ function cleanupOldData($db) {
         // Limpar activity_periods
         $stmt = $db->prepare("
             DELETE FROM activity_periods 
-            WHERE start_time < DATE_SUB(NOW(), INTERVAL 30 DAY)
+            WHERE start_time < DATE_SUB(NOW(), INTERVAL 7 DAY)
         ");
         $stmt->execute();
         $deletedRows['activity_periods'] = $stmt->rowCount();
@@ -65,7 +65,7 @@ function cleanupOldData($db) {
         // Limpar daily_activity_summary
         $stmt = $db->prepare("
             DELETE FROM daily_activity_summary 
-            WHERE date < DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+            WHERE date < DATE_SUB(CURDATE(), INTERVAL 7 DAY)
         ");
         $stmt->execute();
         $deletedRows['daily_activity_summary'] = $stmt->rowCount();
@@ -73,7 +73,7 @@ function cleanupOldData($db) {
         // Limpar last_mouse_activity
         $stmt = $db->prepare("
             DELETE FROM last_mouse_activity 
-            WHERE last_activity < DATE_SUB(NOW(), INTERVAL 30 DAY)
+            WHERE last_activity < DATE_SUB(NOW(), INTERVAL 7 DAY)
         ");
         $stmt->execute();
         $deletedRows['last_mouse_activity'] = $stmt->rowCount();
@@ -81,7 +81,7 @@ function cleanupOldData($db) {
         // Limpar windows_snapshot
         $stmt = $db->prepare("
             DELETE FROM windows_snapshot 
-            WHERE timestamp < DATE_SUB(NOW(), INTERVAL 30 DAY)
+            WHERE timestamp < DATE_SUB(NOW(), INTERVAL 7 DAY)
         ");
         $stmt->execute();
         $deletedRows['windows_snapshot'] = $stmt->rowCount();
@@ -92,7 +92,7 @@ function cleanupOldData($db) {
         
         return [
             'success' => true,
-            'message' => "Removidos $totalDeleted registros com mais de 30 dias",
+            'message' => "Removidos $totalDeleted registros com mais de 7 dias",
             'deleted_by_table' => $deletedRows,
             'total_deleted' => $totalDeleted
         ];
